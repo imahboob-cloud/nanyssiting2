@@ -434,9 +434,9 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
               <span>TVA ({watch('tva')}%):</span>
               <span className="font-semibold">{montant_tva.toFixed(2)} €</span>
             </div>
-            <div className="flex justify-between text-lg font-bold border-t pt-2">
+            <div className="flex justify-between text-xl font-bold border-t-2 border-foreground pt-3 mt-2">
               <span>Montant TTC:</span>
-              <span>{montant_ttc.toFixed(2)} €</span>
+              <span className="text-primary">{montant_ttc.toFixed(2)} €</span>
             </div>
           </div>
 
