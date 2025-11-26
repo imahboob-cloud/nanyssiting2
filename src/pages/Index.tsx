@@ -401,7 +401,7 @@ const Index = () => {
                 <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-sage opacity-10 rounded-tr-[100px]"></div>
               </div>
               
-              <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 md:gap-12 items-center">
                 <div className="order-2 md:order-1">
                   <h1 className="text-4xl md:text-6xl font-extrabold text-foreground leading-tight mb-6 font-heading">
                     Plus qu'une garde, <br/>
