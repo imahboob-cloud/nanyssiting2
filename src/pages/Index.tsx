@@ -126,7 +126,7 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
   }
 
   return (
-    <section id={id} className="py-20 px-6 bg-sage relative overflow-hidden">
+    <section id={id} className="py-20 px-6 bg-sage relative overflow-hidden scroll-mt-20">
       <div className="absolute top-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-salmon opacity-10 rounded-full translate-x-1/3 translate-y-1/3"></div>
 
@@ -488,7 +488,7 @@ const Index = () => {
             </section>
 
             {/* Services */}
-            <section id="services" className="py-16 md:py-20 px-6 bg-muted/30">
+            <section id="services" className="py-16 md:py-20 px-6 bg-muted/30 scroll-mt-20">
               <div className="max-w-7xl mx-auto">
                 <SectionTitle 
                   title="Des services pensés pour vous" 
