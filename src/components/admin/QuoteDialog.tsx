@@ -273,27 +273,70 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                 <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 border rounded-lg">
                   <div className="col-span-2">
                     <Label className="text-xs">Date</Label>
-                    <Input
-                      type="date"
-                      value={ligne.date}
-                      onChange={(e) => updateLigne(index, 'date', e.target.value)}
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal h-9 text-xs",
+                            !ligne.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {ligne.date ? format(new Date(ligne.date), "dd/MM/yy", { locale: fr }) : "Date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={ligne.date ? new Date(ligne.date) : undefined}
+                          onSelect={(date) => updateLigne(index, 'date', date ? format(date, 'yyyy-MM-dd') : '')}
+                          initialFocus
+                          locale={fr}
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs">Heure début</Label>
-                    <Input
-                      type="time"
-                      value={ligne.heure_debut}
-                      onChange={(e) => updateLigne(index, 'heure_debut', e.target.value)}
-                    />
+                    <Select value={ligne.heure_debut} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 48 }, (_, i) => {
+                          const hour = Math.floor(i / 2);
+                          const minute = i % 2 === 0 ? '00' : '30';
+                          const time = `${String(hour).padStart(2, '0')}:${minute}`;
+                          return (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs">Heure fin</Label>
-                    <Input
-                      type="time"
-                      value={ligne.heure_fin}
-                      onChange={(e) => updateLigne(index, 'heure_fin', e.target.value)}
-                    />
+                    <Select value={ligne.heure_fin} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 48 }, (_, i) => {
+                          const hour = Math.floor(i / 2);
+                          const minute = i % 2 === 0 ? '00' : '30';
+                          const time = `${String(hour).padStart(2, '0')}:${minute}`;
+                          return (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
