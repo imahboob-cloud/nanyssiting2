@@ -319,29 +319,6 @@ const handler = async (req: Request): Promise<Response> => {
     setFontBrand('bold', 16, COLORS.salmon);
     doc.text(`${quote.montant_ttc?.toFixed(2) || '0.00'} €`, rightMargin, yPos, { align: 'right' });
 
-    // --- SIGNATURE BOX ("Bon pour accord") ---
-    yPos += 20;
-    
-    // Check if we have space, else new page
-    if (yPos > pageHeight - 50) {
-      doc.addPage();
-      yPos = 20;
-    }
-
-    const signatureBoxWidth = 80;
-    const signatureBoxHeight = 35;
-    const signatureX = margin;
-
-    doc.setDrawColor(COLORS.textGray[0], COLORS.textGray[1], COLORS.textGray[2]);
-    doc.setLineDashPattern([1, 1], 0);
-    doc.rect(signatureX, yPos, signatureBoxWidth, signatureBoxHeight);
-    doc.setLineDashPattern([], 0);
-
-    setFontBrand('bold', 8, COLORS.textGray);
-    doc.text("BON POUR ACCORD", signatureX + 5, yPos + 8);
-    setFontBrand('normal', 7, COLORS.textGray);
-    doc.text("Date et Signature :", signatureX + 5, yPos + 28);
-
     // --- FOOTER ---
     const footerY = pageHeight - 20;
     
