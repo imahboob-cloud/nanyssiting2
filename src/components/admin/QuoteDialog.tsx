@@ -46,7 +46,11 @@ interface QuoteDialogProps {
 export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialogProps) {
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
-  const [dateValidite, setDateValidite] = useState<Date | undefined>();
+  const [dateValidite, setDateValidite] = useState<Date | undefined>(() => {
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 7);
+    return defaultDate;
+  });
   const [lignes, setLignes] = useState<QuoteLine[]>([
     { date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }
   ]);
@@ -75,10 +79,19 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       setValue('notes', quote.notes || '');
       if (quote.date_validite) {
         setDateValidite(new Date(quote.date_validite));
+      } else {
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 7);
+        setDateValidite(defaultDate);
       }
       if (quote.lignes && Array.isArray(quote.lignes)) {
         setLignes(quote.lignes);
       }
+    } else {
+      // Reset to default date (+7 days) when creating new quote
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      setDateValidite(defaultDate);
     }
   }, [quote, setValue]);
 
@@ -210,7 +223,9 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
 
       reset();
       setLignes([{ date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }]);
-      setDateValidite(undefined);
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      setDateValidite(defaultDate);
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
