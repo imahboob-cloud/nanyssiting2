@@ -457,38 +457,12 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   </div>
                   <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
-                    <Select 
-                      value={ligne.description} 
-                      onValueChange={(value) => {
-                        const selectedTarif = tarifs.find(t => t.nom === value);
-                        updateLigne(index, 'description', value);
-                        if (selectedTarif) {
-                          updateLigne(index, 'prix_horaire', parseFloat(selectedTarif.tarif_horaire));
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-9 text-xs">
-                        <SelectValue placeholder="Sélectionner un tarif" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(() => {
-                          const dayOfWeek = getDay(new Date(ligne.date));
-                          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                          
-                          return tarifs
-                            .filter(t => 
-                              t.type_jour === 'tous' || 
-                              (isWeekend && t.type_jour === 'weekend') || 
-                              (!isWeekend && t.type_jour === 'semaine')
-                            )
-                            .map((tarif) => (
-                              <SelectItem key={tarif.id} value={tarif.nom}>
-                                {tarif.nom}
-                              </SelectItem>
-                            ));
-                        })()}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      placeholder="Description"
+                      value={ligne.description}
+                      onChange={(e) => updateLigne(index, 'description', e.target.value)}
+                      className="h-9 text-xs"
+                    />
                   </div>
                   <div className="col-span-1">
                     <Label className="text-xs">Prix/h</Label>
