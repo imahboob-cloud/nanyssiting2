@@ -392,8 +392,8 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Heure début</Label>
+                  <div className="col-span-1">
+                    <Label className="text-xs">Début</Label>
                     <Select value={ligne.heure_debut} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue />
@@ -412,8 +412,8 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Heure fin</Label>
+                  <div className="col-span-1">
+                    <Label className="text-xs">Fin</Label>
                     <Select value={ligne.heure_fin} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue />
@@ -432,7 +432,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-4">
                     <Label className="text-xs">Description</Label>
                     <Input
                       value={ligne.description}
@@ -448,6 +448,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                       step="0.01"
                       value={ligne.prix_horaire}
                       onChange={(e) => updateLigne(index, 'prix_horaire', parseFloat(e.target.value) || 0)}
+                      className="h-9 text-xs"
                     />
                   </div>
                   <div className="col-span-2">
@@ -456,14 +457,15 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                       type="text"
                       value={`${ligne.total.toFixed(2)} €`}
                       disabled
-                      className="bg-muted font-semibold"
+                      className="h-9 text-xs bg-muted font-semibold"
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-1 flex justify-end">
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      className="h-9 w-9"
                       onClick={() => removeLigne(index)}
                       disabled={lignes.length === 1}
                       title="Supprimer"
