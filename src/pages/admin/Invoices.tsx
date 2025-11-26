@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
+import { SendInvoiceDialog } from "@/components/admin/SendInvoiceDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -39,6 +40,8 @@ const Invoices = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [invoiceToSend, setInvoiceToSend] = useState<InvoiceWithClient | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
 
@@ -87,6 +90,11 @@ const Invoices = () => {
   const handleEdit = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setDialogOpen(true);
+  };
+
+  const handleSend = (invoice: InvoiceWithClient) => {
+    setInvoiceToSend(invoice);
+    setSendDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -212,6 +220,14 @@ const Invoices = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleSend(invoice)}
+                        title="Envoyer la facture"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEdit(invoice)}
                       >
                         <Pencil className="h-4 w-4" />
@@ -239,6 +255,15 @@ const Invoices = () => {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["invoices"] });
           setDialogOpen(false);
+        }}
+      />
+
+      <SendInvoiceDialog
+        open={sendDialogOpen}
+        onOpenChange={setSendDialogOpen}
+        invoice={invoiceToSend}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["invoices"] });
         }}
       />
 
