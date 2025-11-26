@@ -83,22 +83,16 @@ const handler = async (req: Request): Promise<Response> => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     
-    // ==================== HEADER WITH GRADIENT ====================
-    // Create gradient background effect with salmon color
-    for (let i = 0; i < 40; i++) {
-      const alpha = 1 - (i / 40);
-      const color = BRAND_COLORS.salmon;
-      doc.setFillColor(color.r, color.g, color.b);
-      doc.setGlobalAlpha(alpha * 0.15);
-      doc.rect(0, i * 0.5, pageWidth, 0.5, 'F');
-    }
-    doc.setGlobalAlpha(1);
+    // ==================== HEADER WITH BRAND COLORS ====================
+    // Top decorative band with salmon color
+    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.rect(0, 0, pageWidth, 8, 'F');
     
     // Decorative circles
     doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
-    doc.circle(pageWidth - 20, 15, 25, 'F');
+    doc.circle(pageWidth - 20, 15, 12, 'F');
     doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-    doc.circle(15, 10, 15, 'F');
+    doc.circle(15, 12, 8, 'F');
     
     // Company name - large and bold
     doc.setFontSize(28);
