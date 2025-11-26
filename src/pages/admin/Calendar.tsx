@@ -13,18 +13,15 @@ import { useToast } from '@/hooks/use-toast';
 
 type CalendarView = 'month' | 'week' | 'day';
 
-const statusColors = {
-  planifie: 'bg-status-planned',
-  en_cours: 'bg-status-in-progress',
-  termine: 'bg-status-completed',
-  annule: 'bg-status-cancelled',
+const statusColorMap: Record<string, string[]> = {
+  planifie: Array.from({ length: 10 }, (_, i) => `bg-status-planned-${i}`),
+  en_cours: Array.from({ length: 10 }, (_, i) => `bg-status-in-progress-${i}`),
+  termine: Array.from({ length: 10 }, (_, i) => `bg-status-completed-${i}`),
+  annule: Array.from({ length: 10 }, (_, i) => `bg-status-cancelled-${i}`),
 };
 
-const statusColorsAlt = {
-  planifie: 'bg-status-planned-alt',
-  en_cours: 'bg-status-in-progress-alt',
-  termine: 'bg-status-completed-alt',
-  annule: 'bg-status-cancelled-alt',
+const getStatusColor = (status: string, colorIndex: number) => {
+  return statusColorMap[status]?.[colorIndex % 10] || statusColorMap.planifie[0];
 };
 
 const statusLabels = {
@@ -81,21 +78,36 @@ const Calendar = () => {
         variant: 'destructive',
       });
     } else {
-      // Ajouter une propriété colorIndex pour gérer les chevauchements
-      const missionsWithColors = (data || []).map((mission: any, index: number, array: any[]) => {
-        // Vérifier si cette mission chevauche la précédente
-        let useAltColor = false;
-        if (index > 0) {
-          const prevMission = array[index - 1];
-          if (
-            mission.date === prevMission.date &&
-            mission.heure_debut < prevMission.heure_fin
-          ) {
-            useAltColor = !prevMission.useAltColor;
-          }
-        }
-        return { ...mission, useAltColor };
+      // Détection sophistiquée des chevauchements pour assigner des index de couleur uniques
+      const missionsWithColors = (data || []).map((mission: any) => {
+        return { ...mission, colorIndex: 0 };
       });
+
+      // Pour chaque date, calculer les chevauchements
+      const dateGroups = missionsWithColors.reduce((acc: any, mission: any) => {
+        if (!acc[mission.date]) acc[mission.date] = [];
+        acc[mission.date].push(mission);
+        return acc;
+      }, {});
+
+      Object.values(dateGroups).forEach((dayMissions: any) => {
+        dayMissions.forEach((mission: any, idx: number) => {
+          // Trouver toutes les missions qui chevauchent celle-ci
+          const overlapping = dayMissions.filter((m: any, mIdx: number) => {
+            if (mIdx >= idx) return false; // Ne regarder que les missions précédentes
+            return m.heure_fin > mission.heure_debut;
+          });
+
+          // Trouver le premier index de couleur disponible
+          const usedIndices = overlapping.map((m: any) => m.colorIndex);
+          let colorIndex = 0;
+          while (usedIndices.includes(colorIndex)) {
+            colorIndex++;
+          }
+          mission.colorIndex = Math.min(colorIndex, 9); // Max 10 couleurs
+        });
+      });
+
       setMissions(missionsWithColors);
     }
   };
@@ -231,8 +243,7 @@ const Calendar = () => {
             onDayClick={handleDayClick}
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
-            statusColors={statusColors}
-            statusColorsAlt={statusColorsAlt}
+            getStatusColor={getStatusColor}
           />
         )}
 
@@ -243,8 +254,7 @@ const Calendar = () => {
             onDayClick={handleDayClick}
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
-            statusColors={statusColors}
-            statusColorsAlt={statusColorsAlt}
+            getStatusColor={getStatusColor}
           />
         )}
 
@@ -255,8 +265,7 @@ const Calendar = () => {
             onDayClick={handleDayClick}
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
-            statusColors={statusColors}
-            statusColorsAlt={statusColorsAlt}
+            getStatusColor={getStatusColor}
           />
         )}
       </Card>

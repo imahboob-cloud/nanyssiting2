@@ -8,11 +8,10 @@ interface WeekViewProps {
   onDayClick: (date: Date) => void;
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
-  statusColors: Record<string, string>;
-  statusColorsAlt: Record<string, string>;
+  getStatusColor: (status: string, colorIndex: number) => string;
 }
 
-export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors, statusColorsAlt }: WeekViewProps) {
+export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor }: WeekViewProps) {
   const weekStart = startOfWeek(currentDate, { locale: fr });
   const weekEnd = endOfWeek(currentDate, { locale: fr });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -83,7 +82,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, on
                 {/* Missions overlay */}
                 {dayMissions.map((mission) => {
                   const { top, height } = getMissionPosition(mission);
-                  const colors = mission.useAltColor ? statusColorsAlt : statusColors;
+                  const colorClass = getStatusColor(mission.statut, mission.colorIndex || 0);
                   
                   return (
                     <div
@@ -92,8 +91,13 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, on
                         e.stopPropagation();
                         onMissionClick(mission, e);
                       }}
-                      className={`absolute inset-x-1 ${colors[mission.statut as keyof typeof colors]} text-white rounded p-1 text-xs overflow-hidden hover:opacity-80 cursor-pointer shadow-sm z-10 flex items-start justify-between group`}
-                      style={{ top: `${top}px`, height: `${height}px` }}
+                      className={`absolute inset-x-1 ${colorClass} text-white rounded p-1 text-xs overflow-hidden hover:opacity-90 cursor-pointer shadow-md z-10 flex items-start justify-between group border-2 border-white`}
+                      style={{ 
+                        top: `${top}px`, 
+                        height: `${height}px`,
+                        left: `${4 + (mission.colorIndex || 0) * 2}px`,
+                        right: `${4}px`
+                      }}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">

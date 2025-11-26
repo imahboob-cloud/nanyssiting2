@@ -8,11 +8,10 @@ interface MonthViewProps {
   onDayClick: (date: Date) => void;
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
-  statusColors: Record<string, string>;
-  statusColorsAlt: Record<string, string>;
+  getStatusColor: (status: string, colorIndex: number) => string;
 }
 
-export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors, statusColorsAlt }: MonthViewProps) {
+export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor }: MonthViewProps) {
   const days = eachDayOfInterval({
     start: startOfMonth(currentDate),
     end: endOfMonth(currentDate),
@@ -52,12 +51,12 @@ export function MonthView({ currentDate, missions, onDayClick, onMissionClick, o
               </div>
               <div className="space-y-1">
                 {dayMissions.map((mission) => {
-                  const colors = mission.useAltColor ? statusColorsAlt : statusColors;
+                  const colorClass = getStatusColor(mission.statut, mission.colorIndex || 0);
                   return (
                     <div
                       key={mission.id}
                       onClick={(e) => onMissionClick(mission, e)}
-                      className={`text-xs p-1 rounded ${colors[mission.statut as keyof typeof colors]} text-white truncate hover:opacity-80 flex items-center justify-between group`}
+                      className={`text-xs p-1 rounded ${colorClass} text-white truncate hover:opacity-80 flex items-center justify-between group border-2 border-white shadow-sm`}
                     >
                       <span className="truncate flex-1">
                         {mission.clients?.nom} {mission.heure_debut?.slice(0, 5)}
