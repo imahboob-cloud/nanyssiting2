@@ -57,6 +57,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        salmon: "hsl(var(--salmon))",
+        sage: "hsl(var(--sage))",
+        lavender: "hsl(var(--lavender))",
+      },
+      fontFamily: {
+        sans: ['Mulish', 'system-ui', 'sans-serif'],
+        heading: ['Quicksand', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
