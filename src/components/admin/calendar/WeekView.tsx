@@ -1,4 +1,4 @@
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, isWithinInterval, startOfDay } from 'date-fns';
+import { format, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface WeekViewProps {
@@ -17,50 +17,20 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
 
   const getMissionsForDay = (day: Date) => {
     return missions.filter((mission) => {
-      const missionStart = new Date(mission.date_debut);
-      const missionEnd = new Date(mission.date_fin);
-      const currentDay = startOfDay(day);
-      
-      return isWithinInterval(currentDay, {
-        start: startOfDay(missionStart),
-        end: startOfDay(missionEnd)
-      });
+      const missionDate = parseISO(mission.date);
+      return isSameDay(missionDate, day);
     });
   };
 
-  const getMissionPosition = (mission: any, day: Date) => {
-    const start = new Date(mission.date_debut);
-    const end = new Date(mission.date_fin);
+  const getMissionPosition = (mission: any) => {
+    const [heureDebut, minuteDebut] = mission.heure_debut.split(':').map(Number);
+    const [heureFin, minuteFin] = mission.heure_fin.split(':').map(Number);
     
-    // Si c'est le premier jour de la mission, commencer à l'heure réelle
-    if (isSameDay(start, day)) {
-      const startHour = start.getHours();
-      const startMinutes = start.getMinutes();
-      const topPosition = (startHour * 64) + (startMinutes / 60 * 64);
-      
-      // Si la mission se termine le même jour
-      if (isSameDay(start, end)) {
-        const diffMs = end.getTime() - start.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
-        const height = Math.max(1, diffHours) * 64;
-        return { top: topPosition, height };
-      } else {
-        // Sinon, aller jusqu'à minuit
-        const height = (24 - startHour - (startMinutes / 60)) * 64;
-        return { top: topPosition, height };
-      }
-    }
-    // Si c'est le dernier jour de la mission
-    else if (isSameDay(end, day)) {
-      const endHour = end.getHours();
-      const endMinutes = end.getMinutes();
-      const height = (endHour + (endMinutes / 60)) * 64;
-      return { top: 0, height };
-    }
-    // Si c'est un jour entre le début et la fin
-    else {
-      return { top: 0, height: 24 * 64 }; // Toute la journée
-    }
+    const topPosition = (heureDebut * 64) + (minuteDebut / 60 * 64);
+    const durationHours = (heureFin + minuteFin / 60) - (heureDebut + minuteDebut / 60);
+    const height = Math.max(1, durationHours) * 64;
+    
+    return { top: topPosition, height };
   };
 
   return (
@@ -93,7 +63,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
                 </div>
               </div>
 
-              {/* Hour grid (for visual guide only) */}
+              {/* Hour grid */}
               <div className="relative" style={{ height: '1536px' }}>
                 {hours.map((hour) => (
                   <div
@@ -109,7 +79,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
 
                 {/* Missions overlay */}
                 {dayMissions.map((mission) => {
-                  const { top, height } = getMissionPosition(mission, day);
+                  const { top, height } = getMissionPosition(mission);
                   
                   return (
                     <div
@@ -125,7 +95,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
                         {mission.clients?.prenom} {mission.clients?.nom}
                       </div>
                       <div className="text-xs opacity-90">
-                        {format(new Date(mission.date_debut), 'HH:mm')} - {format(new Date(mission.date_fin), 'HH:mm')}
+                        {mission.heure_debut?.slice(0, 5)} - {mission.heure_fin?.slice(0, 5)}
                       </div>
                       {mission.nannysitters && (
                         <div className="text-xs opacity-80 truncate">

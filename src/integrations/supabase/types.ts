@@ -165,9 +165,10 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string | null
-          date_debut: string
-          date_fin: string
+          date: string
           description: string | null
+          heure_debut: string
+          heure_fin: string
           id: string
           montant: number | null
           nannysitter_id: string | null
@@ -176,9 +177,10 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string | null
-          date_debut: string
-          date_fin: string
+          date: string
           description?: string | null
+          heure_debut?: string
+          heure_fin?: string
           id?: string
           montant?: number | null
           nannysitter_id?: string | null
@@ -187,9 +189,10 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string | null
-          date_debut?: string
-          date_fin?: string
+          date?: string
           description?: string | null
+          heure_debut?: string
+          heure_fin?: string
           id?: string
           montant?: number | null
           nannysitter_id?: string | null

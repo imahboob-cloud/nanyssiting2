@@ -62,8 +62,10 @@ const Calendar = () => {
         clients (nom, prenom),
         nannysitters (nom, prenom)
       `)
-      .or(`and(date_debut.gte.${start.toISOString()},date_debut.lte.${end.toISOString()}),and(date_fin.gte.${start.toISOString()},date_fin.lte.${end.toISOString()})`)
-      .order('date_debut', { ascending: true });
+      .gte('date', format(start, 'yyyy-MM-dd'))
+      .lte('date', format(end, 'yyyy-MM-dd'))
+      .order('date', { ascending: true })
+      .order('heure_debut', { ascending: true });
 
     if (error) {
       toast({

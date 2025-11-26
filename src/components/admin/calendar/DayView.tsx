@@ -1,4 +1,4 @@
-import { format, isWithinInterval, startOfDay, isSameDay } from 'date-fns';
+import { format, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface DayViewProps {
@@ -14,50 +14,20 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, sta
 
   const getMissionsForDay = () => {
     return missions.filter((mission) => {
-      const missionStart = new Date(mission.date_debut);
-      const missionEnd = new Date(mission.date_fin);
-      const currentDay = startOfDay(currentDate);
-      
-      return isWithinInterval(currentDay, {
-        start: startOfDay(missionStart),
-        end: startOfDay(missionEnd)
-      });
+      const missionDate = parseISO(mission.date);
+      return isSameDay(missionDate, currentDate);
     });
   };
 
   const getMissionPosition = (mission: any) => {
-    const start = new Date(mission.date_debut);
-    const end = new Date(mission.date_fin);
+    const [heureDebut, minuteDebut] = mission.heure_debut.split(':').map(Number);
+    const [heureFin, minuteFin] = mission.heure_fin.split(':').map(Number);
     
-    // Si c'est le premier jour de la mission, commencer à l'heure réelle
-    if (isSameDay(start, currentDate)) {
-      const startHour = start.getHours();
-      const startMinutes = start.getMinutes();
-      const topPosition = (startHour * 80) + (startMinutes / 60 * 80);
-      
-      // Si la mission se termine le même jour
-      if (isSameDay(start, end)) {
-        const diffMs = end.getTime() - start.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
-        const height = Math.max(1, diffHours) * 80;
-        return { top: topPosition, height };
-      } else {
-        // Sinon, aller jusqu'à minuit
-        const height = (24 - startHour - (startMinutes / 60)) * 80;
-        return { top: topPosition, height };
-      }
-    }
-    // Si c'est le dernier jour de la mission
-    else if (isSameDay(end, currentDate)) {
-      const endHour = end.getHours();
-      const endMinutes = end.getMinutes();
-      const height = (endHour + (endMinutes / 60)) * 80;
-      return { top: 0, height };
-    }
-    // Si c'est un jour entre le début et la fin
-    else {
-      return { top: 0, height: 24 * 80 }; // Toute la journée
-    }
+    const topPosition = (heureDebut * 80) + (minuteDebut / 60 * 80);
+    const durationHours = (heureFin + minuteFin / 60) - (heureDebut + minuteDebut / 60);
+    const height = Math.max(1, durationHours) * 80;
+    
+    return { top: topPosition, height };
   };
 
   const dayMissions = getMissionsForDay();
@@ -121,7 +91,7 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, sta
                   {mission.clients?.prenom} {mission.clients?.nom}
                 </div>
                 <div className="text-sm opacity-90 mt-1">
-                  {format(new Date(mission.date_debut), 'HH:mm')} - {format(new Date(mission.date_fin), 'HH:mm')}
+                  {mission.heure_debut?.slice(0, 5)} - {mission.heure_fin?.slice(0, 5)}
                 </div>
                 {mission.nannysitters && (
                   <div className="text-sm opacity-90 mt-1">

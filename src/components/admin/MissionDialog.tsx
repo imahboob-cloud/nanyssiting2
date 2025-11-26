@@ -8,11 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DateTimePicker } from '@/components/ui/datetime-picker';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarIcon, Copy } from 'lucide-react';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const missionSchema = z.object({
   client_id: z.string().min(1, 'Client requis'),
@@ -36,8 +39,10 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [nannysitters, setNannysitters] = useState<any[]>([]);
-  const [dateDebut, setDateDebut] = useState<Date | undefined>(selectedDate || new Date());
-  const [dateFin, setDateFin] = useState<Date | undefined>(selectedDate || new Date());
+  const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
+  const [heureDebut, setHeureDebut] = useState('09:00');
+  const [heureFin, setHeureFin] = useState('18:00');
+  const [duplicateDates, setDuplicateDates] = useState<Date[]>([]);
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<MissionFormData>({
@@ -56,14 +61,14 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
     if (mission) {
       setValue('client_id', mission.client_id);
       setValue('nannysitter_id', mission.nannysitter_id || '');
-      setDateDebut(new Date(mission.date_debut));
-      setDateFin(new Date(mission.date_fin));
+      setDate(new Date(mission.date));
+      setHeureDebut(mission.heure_debut);
+      setHeureFin(mission.heure_fin);
       setValue('description', mission.description || '');
       setValue('montant', mission.montant?.toString() || '');
       setValue('statut', mission.statut);
     } else if (selectedDate) {
-      setDateDebut(selectedDate);
-      setDateFin(selectedDate);
+      setDate(selectedDate);
     }
   }, [mission, selectedDate, setValue]);
 
@@ -87,10 +92,10 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   };
 
   const onSubmit = async (data: MissionFormData) => {
-    if (!dateDebut || !dateFin) {
+    if (!date) {
       toast({
         title: 'Erreur',
-        description: 'Veuillez sélectionner les dates de début et de fin',
+        description: 'Veuillez sélectionner une date',
         variant: 'destructive',
       });
       return;
@@ -101,8 +106,9 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
       const missionData = {
         client_id: data.client_id,
         nannysitter_id: data.nannysitter_id || null,
-        date_debut: dateDebut.toISOString(),
-        date_fin: dateFin.toISOString(),
+        date: format(date, 'yyyy-MM-dd'),
+        heure_debut: heureDebut,
+        heure_fin: heureFin,
         description: data.description || null,
         montant: data.montant ? parseFloat(data.montant) : null,
         statut: data.statut,
@@ -117,15 +123,33 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
         if (error) throw error;
         toast({ title: 'Mission mise à jour avec succès' });
       } else {
+        // Créer la mission principale
         const { error } = await supabase
           .from('missions')
           .insert([missionData]);
 
         if (error) throw error;
-        toast({ title: 'Mission créée avec succès' });
+
+        // Créer les missions dupliquées si nécessaire
+        if (duplicateDates.length > 0) {
+          const duplicateMissions = duplicateDates.map(dupDate => ({
+            ...missionData,
+            date: format(dupDate, 'yyyy-MM-dd'),
+          }));
+
+          const { error: dupError } = await supabase
+            .from('missions')
+            .insert(duplicateMissions);
+
+          if (dupError) throw dupError;
+          toast({ title: `${duplicateDates.length + 1} missions créées avec succès` });
+        } else {
+          toast({ title: 'Mission créée avec succès' });
+        }
       }
 
       reset();
+      setDuplicateDates([]);
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -180,13 +204,71 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
           </div>
 
           <div className="space-y-2">
-            <Label>Date de début *</Label>
-            <DateTimePicker date={dateDebut} setDate={setDateDebut} placeholder="Sélectionner la date de début" />
+            <Label>Date *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP", { locale: fr }) : "Sélectionner une date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                  locale={fr}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div className="space-y-2">
-            <Label>Date de fin *</Label>
-            <DateTimePicker date={dateFin} setDate={setDateFin} placeholder="Sélectionner la date de fin" />
+          {!mission && (
+            <div className="space-y-2">
+              <Label>Dupliquer sur d'autres dates</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start" type="button">
+                    <Copy className="mr-2 h-4 w-4" />
+                    {duplicateDates.length > 0 ? `${duplicateDates.length} date(s) sélectionnée(s)` : 'Sélectionner des dates'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="multiple"
+                    selected={duplicateDates}
+                    onSelect={(dates) => setDuplicateDates(dates || [])}
+                    locale={fr}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              {duplicateDates.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {duplicateDates.length} mission(s) supplémentaire(s) seront créées
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="heure_debut">Heure de début *</Label>
+              <Input type="time" value={heureDebut} onChange={(e) => setHeureDebut(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heure_fin">Heure de fin *</Label>
+              <Input type="time" value={heureFin} onChange={(e) => setHeureFin(e.target.value)} />
+            </div>
           </div>
 
           <div className="space-y-2">
