@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CalendarIcon, Plus, Trash2, Copy } from 'lucide-react';
-import { format, parse, differenceInMinutes } from 'date-fns';
+import { format, parse, differenceInMinutes, getDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -150,9 +150,37 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     }
   };
 
+  const getAppropriateTarif = (date: string) => {
+    const dayOfWeek = getDay(new Date(date));
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+    
+    // Filter tarifs based on day type
+    const appropriateTarifs = tarifs.filter(t => 
+      t.type_jour === 'tous' || 
+      (isWeekend && t.type_jour === 'weekend') || 
+      (!isWeekend && t.type_jour === 'semaine')
+    );
+    
+    // Prioritize specific day type over 'tous'
+    const specificTarif = appropriateTarifs.find(t => 
+      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
+    );
+    
+    return specificTarif || appropriateTarifs[0];
+  };
+
   const updateLigne = (index: number, field: keyof InvoiceLine, value: any) => {
     const newLignes = [...lignes];
     newLignes[index] = { ...newLignes[index], [field]: value };
+    
+    // Auto-select tarif when date changes
+    if (field === 'date' && tarifs.length > 0) {
+      const appropriateTarif = getAppropriateTarif(value);
+      if (appropriateTarif) {
+        newLignes[index].description = appropriateTarif.nom;
+        newLignes[index].prix_horaire = parseFloat(appropriateTarif.tarif_horaire);
+      }
+    }
     
     if (field === 'heure_debut' || field === 'heure_fin' || field === 'prix_horaire') {
       const hours = calculateHours(newLignes[index].heure_debut, newLignes[index].heure_fin);
@@ -387,11 +415,22 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                         <SelectValue placeholder="Sélectionner un tarif" />
                       </SelectTrigger>
                       <SelectContent>
-                        {tarifs.map((tarif) => (
-                          <SelectItem key={tarif.id} value={tarif.nom}>
-                            {tarif.nom}
-                          </SelectItem>
-                        ))}
+                        {(() => {
+                          const dayOfWeek = getDay(new Date(ligne.date));
+                          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                          
+                          return tarifs
+                            .filter(t => 
+                              t.type_jour === 'tous' || 
+                              (isWeekend && t.type_jour === 'weekend') || 
+                              (!isWeekend && t.type_jour === 'semaine')
+                            )
+                            .map((tarif) => (
+                              <SelectItem key={tarif.id} value={tarif.nom}>
+                                {tarif.nom}
+                              </SelectItem>
+                            ));
+                        })()}
                       </SelectContent>
                     </Select>
                   </div>
