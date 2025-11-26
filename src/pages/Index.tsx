@@ -422,29 +422,6 @@ const Index = () => {
                 </a>
               </div>
             </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden mt-8">
-              {/* Floating animation bubbles */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-12 h-12 rounded-full bg-salmon/20 animate-pulse"></div>
-                <div className="absolute top-1/2 right-1/4 w-8 h-8 rounded-full bg-lavender/20 animate-pulse delay-300"></div>
-                <div className="absolute bottom-1/3 left-1/3 w-10 h-10 rounded-full bg-sage/20 animate-pulse delay-700"></div>
-              </div>
-              
-              {/* Comforting message */}
-              <div className="text-center z-10 px-6">
-                <Heart className="text-salmon mx-auto mb-3 animate-pulse" size={32} />
-                <p className="text-sm font-medium text-foreground mb-2">
-                  "Votre tranquillité d'esprit,
-                </p>
-                <p className="text-sm font-medium text-foreground mb-3">
-                  notre mission"
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Des familles heureuses depuis 2024 ✨
-                </p>
-              </div>
-            </div>
           </div>
         )}
       </nav>
