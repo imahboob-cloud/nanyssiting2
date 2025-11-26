@@ -8,11 +8,10 @@ interface DayViewProps {
   onDayClick: (date: Date) => void;
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
-  statusColors: Record<string, string>;
-  statusColorsAlt: Record<string, string>;
+  getStatusColor: (status: string, colorIndex: number) => string;
 }
 
-export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors, statusColorsAlt }: DayViewProps) {
+export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor }: DayViewProps) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const getMissionsForDay = () => {
@@ -79,7 +78,7 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
           {/* Missions overlay */}
           {dayMissions.map((mission) => {
             const { top, height } = getMissionPosition(mission);
-            const colors = mission.useAltColor ? statusColorsAlt : statusColors;
+            const colorClass = getStatusColor(mission.statut, mission.colorIndex || 0);
             
             return (
               <div
@@ -88,8 +87,13 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
                   e.stopPropagation();
                   onMissionClick(mission, e);
                 }}
-                className={`absolute inset-x-2 ${colors[mission.statut as keyof typeof colors]} text-white rounded-lg p-3 overflow-hidden hover:opacity-80 cursor-pointer shadow-md z-10 flex items-start justify-between group`}
-                style={{ top: `${top}px`, height: `${height}px` }}
+                className={`absolute ${colorClass} text-white rounded-lg p-3 overflow-hidden hover:opacity-90 cursor-pointer shadow-lg z-10 flex items-start justify-between group border-2 border-white`}
+                style={{ 
+                  top: `${top}px`, 
+                  height: `${height}px`,
+                  left: `${8 + (mission.colorIndex || 0) * 6}px`,
+                  right: '8px'
+                }}
               >
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-base">

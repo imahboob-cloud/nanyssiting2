@@ -43,15 +43,50 @@ All colors MUST be HSL.
     --sage: 164 28% 60%;
     --lavender: 254 100% 89%;
     
-    /* Mission Status Colors */
-    --status-planned: 18 87% 73%; /* salmon */
-    --status-planned-alt: 18 87% 65%; /* salmon darker */
-    --status-in-progress: 45 93% 70%; /* yellow-orange */
-    --status-in-progress-alt: 45 93% 62%;
-    --status-completed: 164 50% 55%; /* sage green */
-    --status-completed-alt: 164 50% 47%;
-    --status-cancelled: 0 0% 65%; /* gray */
-    --status-cancelled-alt: 0 0% 55%;
+    /* Mission Status Colors - 10 variations pour chevauchements */
+    --status-planned-0: 18 87% 73%; /* salmon */
+    --status-planned-1: 18 87% 65%;
+    --status-planned-2: 18 87% 58%;
+    --status-planned-3: 18 80% 70%;
+    --status-planned-4: 25 85% 70%;
+    --status-planned-5: 15 85% 68%;
+    --status-planned-6: 20 82% 66%;
+    --status-planned-7: 18 75% 60%;
+    --status-planned-8: 22 80% 64%;
+    --status-planned-9: 16 82% 62%;
+    
+    --status-in-progress-0: 45 93% 70%; /* yellow-orange */
+    --status-in-progress-1: 45 93% 62%;
+    --status-in-progress-2: 45 93% 55%;
+    --status-in-progress-3: 48 90% 68%;
+    --status-in-progress-4: 42 90% 68%;
+    --status-in-progress-5: 45 85% 60%;
+    --status-in-progress-6: 47 88% 65%;
+    --status-in-progress-7: 43 88% 58%;
+    --status-in-progress-8: 46 80% 63%;
+    --status-in-progress-9: 44 85% 57%;
+    
+    --status-completed-0: 164 50% 55%; /* sage green */
+    --status-completed-1: 164 50% 47%;
+    --status-completed-2: 164 50% 40%;
+    --status-completed-3: 160 48% 53%;
+    --status-completed-4: 168 48% 53%;
+    --status-completed-5: 164 45% 45%;
+    --status-completed-6: 162 52% 50%;
+    --status-completed-7: 166 46% 42%;
+    --status-completed-8: 164 48% 48%;
+    --status-completed-9: 164 44% 38%;
+    
+    --status-cancelled-0: 0 0% 65%; /* gray */
+    --status-cancelled-1: 0 0% 55%;
+    --status-cancelled-2: 0 0% 48%;
+    --status-cancelled-3: 0 0% 62%;
+    --status-cancelled-4: 0 0% 58%;
+    --status-cancelled-5: 0 0% 52%;
+    --status-cancelled-6: 0 0% 60%;
+    --status-cancelled-7: 0 0% 50%;
+    --status-cancelled-8: 0 0% 56%;
+    --status-cancelled-9: 0 0% 45%;
 
     --sidebar-background: 0 0% 98%;
 
