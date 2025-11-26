@@ -25,6 +25,7 @@ import { NannyButton } from '@/components/NannyButton';
 import { SectionTitle } from '@/components/SectionTitle';
 import { ServiceSelect } from '@/components/ServiceSelect';
 import { PhoneReveal } from '@/components/PhoneReveal';
+import { WhatsAppIcon } from '@/components/WhatsAppIcon';
 import SuccessPopup from '@/components/SuccessPopup';
 import { services, Service } from '@/data/services';
 import { cn } from '@/lib/utils';
@@ -450,7 +451,7 @@ const Index = () => {
                 className="w-9 h-9 rounded-full bg-muted hover:bg-[#25D366] text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                 aria-label="WhatsApp"
               >
-                <MessageCircle size={18} />
+                <WhatsAppIcon size={18} />
               </a>
               <a 
                 href="tel:+32493423478"
@@ -513,7 +514,7 @@ const Index = () => {
                   rel="noopener noreferrer"
                   className="w-12 h-12 rounded-full bg-[#25D366]/10 flex items-center justify-center hover:bg-[#25D366]/20 transition-colors"
                 >
-                  <MessageCircle size={24} className="text-[#25D366]" />
+                  <WhatsAppIcon size={24} className="text-[#25D366]" />
                 </a>
               </div>
             </div>
@@ -732,7 +733,7 @@ const Index = () => {
                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[#25D366] transition-all duration-300 hover:scale-110"
                 aria-label="WhatsApp"
               >
-                <MessageCircle size={20} />
+                <WhatsAppIcon size={20} />
               </a>
             </div>
             
