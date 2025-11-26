@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2, Send } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { QuoteDialog } from "@/components/admin/QuoteDialog";
 import { SendQuoteDialog } from "@/components/admin/SendQuoteDialog";
+import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -44,6 +45,8 @@ const Quotes = () => {
   const [quoteToDelete, setQuoteToDelete] = useState<string | null>(null);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [quoteToSend, setQuoteToSend] = useState<QuoteWithClient | null>(null);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [quoteForInvoice, setQuoteForInvoice] = useState<QuoteWithClient | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -108,6 +111,11 @@ const Quotes = () => {
   const handleSend = (quote: QuoteWithClient) => {
     setQuoteToSend(quote);
     setSendDialogOpen(true);
+  };
+
+  const handleGenerateInvoice = (quote: QuoteWithClient) => {
+    setQuoteForInvoice(quote);
+    setInvoiceDialogOpen(true);
   };
 
   const getStatusBadge = (statut: string) => {
@@ -219,6 +227,16 @@ const Quotes = () => {
                   <TableCell>{getStatusBadge(quote.statut || "brouillon")}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      {quote.statut === 'accepte' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleGenerateInvoice(quote)}
+                          title="Générer une facture"
+                        >
+                          <Receipt className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -266,6 +284,24 @@ const Quotes = () => {
         quote={quoteToSend}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["quotes"] });
+        }}
+      />
+
+      <InvoiceDialog
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+        quoteData={quoteForInvoice ? {
+          client_id: quoteForInvoice.client_id,
+          lignes: quoteForInvoice.lignes as any,
+          tva: quoteForInvoice.tva || 0,
+          notes: quoteForInvoice.notes || '',
+          quote_id: quoteForInvoice.id,
+        } : undefined}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["invoices"] });
+          setInvoiceDialogOpen(false);
+          setQuoteForInvoice(null);
+          toast.success("Facture générée avec succès");
         }}
       />
 
