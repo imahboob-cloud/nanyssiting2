@@ -9,9 +9,10 @@ interface WeekViewProps {
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   statusColors: Record<string, string>;
+  statusColorsAlt: Record<string, string>;
 }
 
-export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors }: WeekViewProps) {
+export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors, statusColorsAlt }: WeekViewProps) {
   const weekStart = startOfWeek(currentDate, { locale: fr });
   const weekEnd = endOfWeek(currentDate, { locale: fr });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -82,6 +83,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, on
                 {/* Missions overlay */}
                 {dayMissions.map((mission) => {
                   const { top, height } = getMissionPosition(mission);
+                  const colors = mission.useAltColor ? statusColorsAlt : statusColors;
                   
                   return (
                     <div
@@ -90,7 +92,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, on
                         e.stopPropagation();
                         onMissionClick(mission, e);
                       }}
-                      className={`absolute inset-x-1 ${statusColors[mission.statut as keyof typeof statusColors]} text-white rounded p-1 text-xs overflow-hidden hover:opacity-80 cursor-pointer shadow-sm z-10 flex items-start justify-between group`}
+                      className={`absolute inset-x-1 ${colors[mission.statut as keyof typeof colors]} text-white rounded p-1 text-xs overflow-hidden hover:opacity-80 cursor-pointer shadow-sm z-10 flex items-start justify-between group`}
                       style={{ top: `${top}px`, height: `${height}px` }}
                     >
                       <div className="flex-1 min-w-0">

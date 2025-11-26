@@ -14,10 +14,17 @@ import { useToast } from '@/hooks/use-toast';
 type CalendarView = 'month' | 'week' | 'day';
 
 const statusColors = {
-  planifie: 'bg-blue-500',
-  en_cours: 'bg-yellow-500',
-  termine: 'bg-green-500',
-  annule: 'bg-gray-500',
+  planifie: 'bg-status-planned',
+  en_cours: 'bg-status-in-progress',
+  termine: 'bg-status-completed',
+  annule: 'bg-status-cancelled',
+};
+
+const statusColorsAlt = {
+  planifie: 'bg-status-planned-alt',
+  en_cours: 'bg-status-in-progress-alt',
+  termine: 'bg-status-completed-alt',
+  annule: 'bg-status-cancelled-alt',
 };
 
 const statusLabels = {
@@ -74,7 +81,22 @@ const Calendar = () => {
         variant: 'destructive',
       });
     } else {
-      setMissions(data || []);
+      // Ajouter une propriété colorIndex pour gérer les chevauchements
+      const missionsWithColors = (data || []).map((mission: any, index: number, array: any[]) => {
+        // Vérifier si cette mission chevauche la précédente
+        let useAltColor = false;
+        if (index > 0) {
+          const prevMission = array[index - 1];
+          if (
+            mission.date === prevMission.date &&
+            mission.heure_debut < prevMission.heure_fin
+          ) {
+            useAltColor = !prevMission.useAltColor;
+          }
+        }
+        return { ...mission, useAltColor };
+      });
+      setMissions(missionsWithColors);
     }
   };
 
@@ -210,6 +232,7 @@ const Calendar = () => {
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
             statusColors={statusColors}
+            statusColorsAlt={statusColorsAlt}
           />
         )}
 
@@ -221,6 +244,7 @@ const Calendar = () => {
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
             statusColors={statusColors}
+            statusColorsAlt={statusColorsAlt}
           />
         )}
 
@@ -232,6 +256,7 @@ const Calendar = () => {
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
             statusColors={statusColors}
+            statusColorsAlt={statusColorsAlt}
           />
         )}
       </Card>

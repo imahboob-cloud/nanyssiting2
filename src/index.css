@@ -42,6 +42,16 @@ All colors MUST be HSL.
     --salmon: 18 87% 73%;
     --sage: 164 28% 60%;
     --lavender: 254 100% 89%;
+    
+    /* Mission Status Colors */
+    --status-planned: 18 87% 73%; /* salmon */
+    --status-planned-alt: 18 87% 65%; /* salmon darker */
+    --status-in-progress: 45 93% 70%; /* yellow-orange */
+    --status-in-progress-alt: 45 93% 62%;
+    --status-completed: 164 50% 55%; /* sage green */
+    --status-completed-alt: 164 50% 47%;
+    --status-cancelled: 0 0% 65%; /* gray */
+    --status-cancelled-alt: 0 0% 55%;
 
     --sidebar-background: 0 0% 98%;
 
