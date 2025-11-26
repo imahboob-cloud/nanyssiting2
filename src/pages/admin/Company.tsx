@@ -14,6 +14,7 @@ const companySchema = z.object({
   denomination_sociale: z.string().min(1, 'La dénomination sociale est requise'),
   adresse_siege: z.string().min(1, 'L\'adresse du siège est requise'),
   numero_tva: z.string().min(1, 'Le numéro de TVA est requis'),
+  iban: z.string().optional(),
   telephone: z.string().optional(),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   site_web: z.string().url('URL invalide').optional().or(z.literal('')),
@@ -39,6 +40,7 @@ const Company = () => {
       denomination_sociale: '',
       adresse_siege: '',
       numero_tva: '',
+      iban: '',
       telephone: '',
       email: '',
       site_web: '',
@@ -67,6 +69,7 @@ const Company = () => {
           denomination_sociale: data.denomination_sociale || '',
           adresse_siege: data.adresse_siege || '',
           numero_tva: data.numero_tva || '',
+          iban: data.iban || '',
           telephone: data.telephone || '',
           email: data.email || '',
           site_web: data.site_web || '',
@@ -92,6 +95,7 @@ const Company = () => {
         denomination_sociale: data.denomination_sociale,
         adresse_siege: data.adresse_siege,
         numero_tva: data.numero_tva,
+        iban: data.iban || null,
         telephone: data.telephone || null,
         email: data.email || null,
         site_web: data.site_web || null,
@@ -187,6 +191,18 @@ const Company = () => {
                 />
                 {errors.numero_tva && (
                   <p className="text-sm text-destructive">{errors.numero_tva.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="iban">IBAN</Label>
+                <Input
+                  id="iban"
+                  {...register('iban')}
+                  placeholder="BE68 5390 0754 7034"
+                />
+                {errors.iban && (
+                  <p className="text-sm text-destructive">{errors.iban.message}</p>
                 )}
               </div>
 

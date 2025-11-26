@@ -65,6 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       denomination_sociale: 'Garde-Malade et Babysitting',
       adresse_siege: 'Rue Emile Dury 164',
       numero_tva: 'BE74293324792',
+      iban: '',
       telephone: '+971 58 598 4937',
       email: 'contact@nannysitting.be',
       site_web: 'www.nannysitting.be'
@@ -119,6 +120,9 @@ const handler = async (req: Request): Promise<Response> => {
     doc.text(company.adresse_siege || '', margin, yPos + 5);
     doc.text(`TVA: ${company.numero_tva || ''}`, margin, yPos + 10);
     doc.text(`Tél: ${company.telephone || ''}`, margin, yPos + 15);
+    if (company.iban) {
+      doc.text(`IBAN: ${company.iban}`, margin, yPos + 20);
+    }
 
     // Invoice Title & Number (Right side)
     const rightMargin = pageWidth - margin;
@@ -315,6 +319,35 @@ const handler = async (req: Request): Promise<Response> => {
     doc.text("Total TTC", totalsX, yPos);
     setFontBrand('bold', 16, COLORS.salmon);
     doc.text(`${invoice.montant_ttc?.toFixed(2) || '0.00'} €`, rightMargin, yPos, { align: 'right' });
+
+    // --- PAYMENT NOTICE ---
+    yPos += 15;
+    if (invoice.date_echeance || company.iban) {
+      doc.setFillColor(249, 250, 251); // Light gray background
+      doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 20, 2, 2, 'F');
+      
+      setFontBrand('bold', 10, COLORS.textDark);
+      doc.text("MODALITÉS DE PAIEMENT", margin + 5, yPos + 7);
+      
+      setFontBrand('normal', 9, COLORS.textGray);
+      let paymentText = '';
+      if (invoice.date_echeance) {
+        const dateEcheance = new Date(invoice.date_echeance).toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        });
+        paymentText = `Merci de régler cette facture avant le ${dateEcheance}`;
+      }
+      if (company.iban) {
+        paymentText += invoice.date_echeance ? ` sur le compte IBAN: ${company.iban}` : `À payer sur le compte IBAN: ${company.iban}`;
+      }
+      
+      const paymentLines = doc.splitTextToSize(paymentText, pageWidth - (margin * 2) - 10);
+      doc.text(paymentLines, margin + 5, yPos + 14);
+      
+      yPos += 20;
+    }
 
     // --- FOOTER ---
     const footerY = pageHeight - 20;
