@@ -1,4 +1,4 @@
-import { format, eachDayOfInterval, startOfMonth, endOfMonth, isSameMonth, isSameDay, isWithinInterval, startOfDay } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, isSameMonth, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface MonthViewProps {
@@ -17,14 +17,8 @@ export function MonthView({ currentDate, missions, onDayClick, onMissionClick, s
 
   const getMissionsForDay = (day: Date) => {
     return missions.filter((mission) => {
-      const missionStart = startOfDay(new Date(mission.date_debut));
-      const missionEnd = startOfDay(new Date(mission.date_fin));
-      const currentDay = startOfDay(day);
-      
-      return isWithinInterval(currentDay, {
-        start: missionStart,
-        end: missionEnd
-      });
+      const missionDate = parseISO(mission.date);
+      return isSameDay(missionDate, day);
     });
   };
 
@@ -60,7 +54,7 @@ export function MonthView({ currentDate, missions, onDayClick, onMissionClick, s
                     onClick={(e) => onMissionClick(mission, e)}
                     className={`text-xs p-1 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white truncate hover:opacity-80`}
                   >
-                    {mission.clients?.nom} {format(new Date(mission.date_debut), 'HH:mm')}
+                    {mission.clients?.nom} {mission.heure_debut?.slice(0, 5)}
                   </div>
                 ))}
               </div>
