@@ -18,6 +18,9 @@ interface ContactFormRequest {
   name: string;
   email: string;
   phone: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
   service: string;
   message: string;
 }
@@ -133,6 +136,19 @@ const createEmailHTML = (data: ContactFormRequest) => {
                   </td>
                 </tr>
 
+                ${data.address || data.city ? `
+                <!-- Row: Adresse -->
+                <tr>
+                  <td style="padding-bottom: 20px;">
+                    <p style="margin: 0 0 5px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Lieu de prestation</p>
+                    <div style="background-color: #FFF9F5; padding: 12px; border-radius: 8px; color: #2D3748;">
+                      ${data.address || ''}<br/>
+                      ${data.postalCode || ''} ${data.city || ''}
+                    </div>
+                  </td>
+                </tr>
+                ` : ''}
+
                 <!-- Row: Message Box -->
                 <tr>
                   <td style="padding-top: 10px; padding-bottom: 30px;">
@@ -183,7 +199,7 @@ serve(async (req) => {
   }
 
   try {
-    const { name, email, phone, service, message }: ContactFormRequest = await req.json();
+    const { name, email, phone, address, postalCode, city, service, message }: ContactFormRequest = await req.json();
 
     console.log('Processing contact form submission:', { name, email, service });
 
@@ -200,6 +216,9 @@ serve(async (req) => {
         nom: lastName,
         email,
         telephone: phone,
+        adresse: address || null,
+        code_postal: postalCode || null,
+        ville: city || null,
         service_souhaite: service,
         message,
         statut: 'prospect'
@@ -224,7 +243,7 @@ serve(async (req) => {
         to: ['contact@nannysitting.be'],
         reply_to: email,
         subject: `Nouvelle demande de ${name} - ${service}`,
-        html: createEmailHTML({ name, email, phone, service, message }),
+        html: createEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
       }),
     });
 
