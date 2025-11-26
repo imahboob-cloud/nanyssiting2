@@ -110,6 +110,12 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+    setTimeout(() => {
+      const formSection = document.getElementById(id);
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   if (submitted) {
@@ -338,13 +344,28 @@ const Index = () => {
     setSelectedService(service);
     setView('service');
     setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const navigateHome = () => {
     setView('home');
     setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
+  const navigateHomeToServices = () => {
+    setView('home');
+    setMobileMenuOpen(false);
+    setTimeout(() => {
+      const servicesSection = document.getElementById('services');
+      if (servicesSection) {
+        servicesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const scrollToSection = (id: string) => {
@@ -559,7 +580,7 @@ const Index = () => {
             <ContactSection id="contact-form-section" />
           </div>
         ) : selectedService ? (
-          <ServiceDetailPage service={selectedService} onBack={navigateHome} />
+          <ServiceDetailPage service={selectedService} onBack={navigateHomeToServices} />
         ) : null}
       </main>
 
