@@ -14,16 +14,338 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          adresse: string | null
+          code_postal: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          message: string | null
+          nom: string
+          notes: string | null
+          prenom: string
+          service_souhaite: string | null
+          statut: Database["public"]["Enums"]["client_status"] | null
+          telephone: string | null
+          updated_at: string | null
+          ville: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          code_postal?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          nom: string
+          notes?: string | null
+          prenom: string
+          service_souhaite?: string | null
+          statut?: Database["public"]["Enums"]["client_status"] | null
+          telephone?: string | null
+          updated_at?: string | null
+          ville?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          code_postal?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          nom?: string
+          notes?: string | null
+          prenom?: string
+          service_souhaite?: string | null
+          statut?: Database["public"]["Enums"]["client_status"] | null
+          telephone?: string | null
+          updated_at?: string | null
+          ville?: string | null
+        }
+        Relationships: []
+      }
+      company_info: {
+        Row: {
+          adresse_siege: string
+          denomination_sociale: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          numero_tva: string
+          site_web: string | null
+          telephone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adresse_siege?: string
+          denomination_sociale?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          numero_tva?: string
+          site_web?: string | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adresse_siege?: string
+          denomination_sociale?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          numero_tva?: string
+          site_web?: string | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          date_echeance: string | null
+          id: string
+          lignes: Json | null
+          montant_ht: number | null
+          montant_ttc: number | null
+          notes: string | null
+          numero: string
+          quote_id: string | null
+          statut: Database["public"]["Enums"]["invoice_status"] | null
+          tva: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          date_echeance?: string | null
+          id?: string
+          lignes?: Json | null
+          montant_ht?: number | null
+          montant_ttc?: number | null
+          notes?: string | null
+          numero: string
+          quote_id?: string | null
+          statut?: Database["public"]["Enums"]["invoice_status"] | null
+          tva?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          date_echeance?: string | null
+          id?: string
+          lignes?: Json | null
+          montant_ht?: number | null
+          montant_ttc?: number | null
+          notes?: string | null
+          numero?: string
+          quote_id?: string | null
+          statut?: Database["public"]["Enums"]["invoice_status"] | null
+          tva?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          date_debut: string
+          date_fin: string
+          description: string | null
+          id: string
+          montant: number | null
+          nannysitter_id: string | null
+          statut: Database["public"]["Enums"]["mission_status"] | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          date_debut: string
+          date_fin: string
+          description?: string | null
+          id?: string
+          montant?: number | null
+          nannysitter_id?: string | null
+          statut?: Database["public"]["Enums"]["mission_status"] | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          date_debut?: string
+          date_fin?: string
+          description?: string | null
+          id?: string
+          montant?: number | null
+          nannysitter_id?: string | null
+          statut?: Database["public"]["Enums"]["mission_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_nannysitter_id_fkey"
+            columns: ["nannysitter_id"]
+            isOneToOne: false
+            referencedRelation: "nannysitters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nannysitters: {
+        Row: {
+          actif: boolean | null
+          competences: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          nom: string
+          prenom: string
+          tarif_horaire: number | null
+          telephone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          competences?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nom: string
+          prenom: string
+          tarif_horaire?: number | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          competences?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nom?: string
+          prenom?: string
+          tarif_horaire?: number | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          date_validite: string | null
+          id: string
+          lignes: Json | null
+          montant_ht: number | null
+          montant_ttc: number | null
+          notes: string | null
+          numero: string
+          statut: Database["public"]["Enums"]["quote_status"] | null
+          tva: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          date_validite?: string | null
+          id?: string
+          lignes?: Json | null
+          montant_ht?: number | null
+          montant_ttc?: number | null
+          notes?: string | null
+          numero: string
+          statut?: Database["public"]["Enums"]["quote_status"] | null
+          tva?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          date_validite?: string | null
+          id?: string
+          lignes?: Json | null
+          montant_ht?: number | null
+          montant_ttc?: number | null
+          notes?: string | null
+          numero?: string
+          statut?: Database["public"]["Enums"]["quote_status"] | null
+          tva?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner"
+      client_status: "prospect" | "client"
+      invoice_status: "brouillon" | "envoyee" | "payee" | "en_retard"
+      mission_status:
+        | "planifie"
+        | "a_attribuer"
+        | "en_cours"
+        | "termine"
+        | "annule"
+      quote_status: "brouillon" | "envoye" | "accepte" | "refuse" | "expire"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +472,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner"],
+      client_status: ["prospect", "client"],
+      invoice_status: ["brouillon", "envoyee", "payee", "en_retard"],
+      mission_status: [
+        "planifie",
+        "a_attribuer",
+        "en_cours",
+        "termine",
+        "annule",
+      ],
+      quote_status: ["brouillon", "envoye", "accepte", "refuse", "expire"],
+    },
   },
 } as const
