@@ -12,7 +12,8 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, user, loading } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,14 +27,22 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = isSignUp 
+      ? await signUp(email, password)
+      : await signIn(email, password);
 
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'Erreur de connexion',
+        title: isSignUp ? 'Erreur d\'inscription' : 'Erreur de connexion',
         description: error.message,
       });
+    } else if (isSignUp) {
+      toast({
+        title: 'Compte créé avec succès',
+        description: 'Vous pouvez maintenant vous connecter.',
+      });
+      setIsSignUp(false);
     }
 
     setIsLoading(false);
@@ -53,7 +62,9 @@ const Login = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Administration</CardTitle>
           <CardDescription className="text-center">
-            Connectez-vous pour accéder au back-office
+            {isSignUp 
+              ? 'Créez votre compte administrateur'
+              : 'Connectez-vous pour accéder au back-office'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -85,13 +96,25 @@ const Login = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connexion...
+                  {isSignUp ? 'Inscription...' : 'Connexion...'}
                 </>
               ) : (
-                'Se connecter'
+                isSignUp ? 'S\'inscrire' : 'Se connecter'
               )}
             </Button>
           </form>
+          <div className="mt-4 text-center text-sm">
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-primary hover:underline"
+              disabled={isLoading}
+            >
+              {isSignUp 
+                ? 'Déjà un compte ? Se connecter'
+                : 'Pas de compte ? S\'inscrire'}
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
