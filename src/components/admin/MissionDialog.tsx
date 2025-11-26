@@ -245,7 +245,14 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
                   <Calendar
                     mode="multiple"
                     selected={duplicateDates}
-                    onSelect={(dates) => setDuplicateDates(dates || [])}
+                    onSelect={(dates) => {
+                      // Empêcher la sélection de la date principale
+                      const filteredDates = dates?.filter(d => 
+                        !date || format(d, 'yyyy-MM-dd') !== format(date, 'yyyy-MM-dd')
+                      ) || [];
+                      setDuplicateDates(filteredDates);
+                    }}
+                    disabled={(day) => date ? format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd') : false}
                     locale={fr}
                     className="pointer-events-auto"
                   />
@@ -262,12 +269,36 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="heure_debut">Heure de début *</Label>
-              <Input type="time" value={heureDebut} onChange={(e) => setHeureDebut(e.target.value)} />
+              <Select value={heureDebut} onValueChange={setHeureDebut}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 48 }, (_, i) => {
+                    const hour = Math.floor(i / 2);
+                    const minute = i % 2 === 0 ? '00' : '30';
+                    const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                    return <SelectItem key={time} value={time}>{time}</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="heure_fin">Heure de fin *</Label>
-              <Input type="time" value={heureFin} onChange={(e) => setHeureFin(e.target.value)} />
+              <Select value={heureFin} onValueChange={setHeureFin}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 48 }, (_, i) => {
+                    const hour = Math.floor(i / 2);
+                    const minute = i % 2 === 0 ? '00' : '30';
+                    const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                    return <SelectItem key={time} value={time}>{time}</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
