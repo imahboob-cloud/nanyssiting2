@@ -678,7 +678,7 @@ const Index = () => {
                   <span>+32 493 42 34 78</span>
                 </a>
               </li>
-              <li className="flex items-center gap-2"><MapPin size={16}/> Bruxelles & Environs</li>
+              <li className="flex items-center gap-2"><MapPin size={16}/> Bruxelles, Brabant-Wallon, Hainaut</li>
             </ul>
           </div>
         </div>
