@@ -495,7 +495,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-4">
                     <Label className="text-xs">Description</Label>
                     <Input
                       value={ligne.description}
@@ -511,6 +511,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       step="0.01"
                       value={ligne.prix_horaire}
                       onChange={(e) => updateLigne(index, 'prix_horaire', parseFloat(e.target.value) || 0)}
+                      className="h-9 text-xs"
                     />
                   </div>
                   <div className="col-span-2">
@@ -519,14 +520,15 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       type="text"
                       value={`${ligne.total.toFixed(2)} €`}
                       disabled
-                      className="bg-muted font-semibold"
+                      className="h-9 text-xs bg-muted font-semibold"
                     />
                   </div>
-                  <div className="col-span-1 flex gap-1">
+                  <div className="col-span-1 flex gap-1 justify-end">
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      className="h-9 w-9"
                       onClick={() => openDuplicateDialog(index)}
                       title="Dupliquer sur plusieurs dates"
                     >
@@ -536,6 +538,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       type="button"
                       variant="ghost"
                       size="icon"
+                      className="h-9 w-9"
                       onClick={() => removeLigne(index)}
                       disabled={lignes.length === 1}
                       title="Supprimer"
