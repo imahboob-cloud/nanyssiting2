@@ -27,9 +27,7 @@ interface SendInvoiceDialogProps {
 export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: SendInvoiceDialogProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
-  const [generatingPdf, setGeneratingPdf] = useState(false);
-  const [pdfPreview, setPdfPreview] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const { toast } = useToast();
 
   // Update email when invoice changes
@@ -39,14 +37,12 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
     } else {
       setEmail('');
     }
-    // Reset PDF preview when invoice changes
-    setPdfPreview(null);
   }, [invoice]);
 
-  const handleGeneratePreview = async () => {
+  const handleDownloadPdf = async () => {
     if (!invoice) return;
 
-    setGeneratingPdf(true);
+    setDownloadingPdf(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-invoice-pdf', {
         body: { invoiceId: invoice.id },
@@ -55,18 +51,25 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
       if (error) throw error;
 
       if (data?.pdf) {
-        setPdfPreview(data.pdf);
-        setShowPreview(true);
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Facture-${invoice.numero}.pdf`;
+        link.click();
+        
+        toast({
+          title: 'PDF téléchargé',
+          description: 'La facture a été téléchargée avec succès',
+        });
       }
     } catch (error: any) {
-      console.error('Error generating PDF preview:', error);
+      console.error('Error downloading PDF:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de générer l\'aperçu PDF',
+        description: 'Impossible de télécharger le PDF',
         variant: 'destructive',
       });
     } finally {
-      setGeneratingPdf(false);
+      setDownloadingPdf(false);
     }
   };
 
@@ -130,48 +133,31 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
   if (!invoice) return null;
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Envoyer la facture</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGeneratePreview}
-                disabled={generatingPdf}
-                className="flex-1"
-              >
-                {generatingPdf ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Génération...
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Aperçu PDF
-                  </>
-                )}
-              </Button>
-              {pdfPreview && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = pdfPreview;
-                    link.download = `Facture-${invoice.numero}.pdf`;
-                    link.click();
-                  }}
-                >
-                  <FileText className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Envoyer la facture</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="w-full"
+          >
+            {downloadingPdf ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Téléchargement...
+              </>
+            ) : (
+              <>
+                <FileText className="mr-2 h-4 w-4" />
+                Télécharger le PDF
+              </>
+            )}
+          </Button>
 
           <div className="p-4 border rounded-lg space-y-2 bg-muted">
             <div className="flex justify-between text-sm">
@@ -232,24 +218,5 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* PDF Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Aperçu - Facture {invoice.numero}</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden">
-            {pdfPreview && (
-              <iframe 
-                src={pdfPreview} 
-                className="w-full h-full border-0"
-                title="Aperçu de la facture"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
+    );
+  }

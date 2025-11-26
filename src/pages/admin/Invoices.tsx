@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2, Send } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -44,6 +44,7 @@ const Invoices = () => {
   const [invoiceToSend, setInvoiceToSend] = useState<InvoiceWithClient | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -95,6 +96,31 @@ const Invoices = () => {
   const handleSend = (invoice: InvoiceWithClient) => {
     setInvoiceToSend(invoice);
     setSendDialogOpen(true);
+  };
+
+  const handleDownload = async (invoice: InvoiceWithClient) => {
+    setDownloadingPdf(invoice.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-invoice-pdf', {
+        body: { invoiceId: invoice.id },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Facture-${invoice.numero}.pdf`;
+        link.click();
+        
+        toast.success('PDF téléchargé avec succès');
+      }
+    } catch (error: any) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Erreur lors du téléchargement du PDF');
+    } finally {
+      setDownloadingPdf(null);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -217,6 +243,19 @@ const Invoices = () => {
                   <TableCell>{getStatusBadge(invoice.statut || "brouillon")}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownload(invoice)}
+                        disabled={downloadingPdf === invoice.id}
+                        title="Télécharger le PDF"
+                      >
+                        {downloadingPdf === invoice.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
