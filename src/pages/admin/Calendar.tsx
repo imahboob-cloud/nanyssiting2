@@ -92,8 +92,8 @@ const Calendar = () => {
     setDialogOpen(true);
   };
 
-  const handleDeleteMission = async (missionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteMission = async (missionId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
       return;
     }
@@ -242,6 +242,7 @@ const Calendar = () => {
         mission={selectedMission}
         selectedDate={selectedDate || undefined}
         onSuccess={loadMissions}
+        onDelete={handleDeleteMission}
       />
     </div>
   );

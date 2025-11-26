@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CalendarIcon, Copy } from 'lucide-react';
+import { Loader2, CalendarIcon, Copy, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -33,9 +33,10 @@ interface MissionDialogProps {
   mission?: any;
   selectedDate?: Date;
   onSuccess: () => void;
+  onDelete?: (missionId: string) => void;
 }
 
-export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuccess }: MissionDialogProps) {
+export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuccess, onDelete }: MissionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [nannysitters, setNannysitters] = useState<any[]>([]);
@@ -89,6 +90,37 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
       .order('nom', { ascending: true });
     
     if (!error && data) setNannysitters(data);
+  };
+
+  const handleDelete = async () => {
+    if (!mission || !onDelete) return;
+    
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('missions')
+        .delete()
+        .eq('id', mission.id);
+
+      if (error) throw error;
+      
+      toast({ title: 'Mission supprimée avec succès' });
+      reset();
+      onOpenChange(false);
+      onSuccess();
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSubmit = async (data: MissionFormData) => {
@@ -316,14 +348,30 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
             <Textarea {...register('description')} placeholder="Description de la mission..." />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mission ? 'Mettre à jour' : 'Créer'}
-            </Button>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <div>
+              {mission && (
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={handleDelete}
+                  disabled={loading}
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {mission ? 'Mettre à jour' : 'Créer'}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
