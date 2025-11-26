@@ -1,7 +1,13 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') as string;
+
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -179,7 +185,32 @@ serve(async (req) => {
   try {
     const { name, email, phone, service, message }: ContactFormRequest = await req.json();
 
-    console.log('Sending contact form email:', { name, email, service });
+    console.log('Processing contact form submission:', { name, email, service });
+
+    // Parse name into firstName and lastName
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Save prospect to database
+    const { error: dbError } = await supabaseAdmin
+      .from('clients')
+      .insert({
+        prenom: firstName,
+        nom: lastName,
+        email,
+        telephone: phone,
+        service_souhaite: service,
+        message,
+        statut: 'prospect'
+      });
+
+    if (dbError) {
+      console.error('Error saving prospect to database:', dbError);
+      // Continue with email even if DB insert fails
+    } else {
+      console.log('Prospect saved to database successfully');
+    }
 
     // Send email using Resend API directly
     const resendResponse = await fetch('https://api.resend.com/emails', {
