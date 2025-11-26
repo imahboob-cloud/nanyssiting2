@@ -13,6 +13,7 @@ import NannySitters from "./pages/admin/NannySitters";
 import Calendar from "./pages/admin/Calendar";
 import Quotes from "./pages/admin/Quotes";
 import Invoices from "./pages/admin/Invoices";
+import Tarifs from "./pages/admin/Tarifs";
 import { AdminLayout } from "./components/admin/AdminLayout";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="calendar" element={<Calendar />} />
             <Route path="quotes" element={<Quotes />} />
             <Route path="invoices" element={<Invoices />} />
+            <Route path="tarifs" element={<Tarifs />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
