@@ -18,7 +18,8 @@ import {
   Users,
   Quote,
   Instagram,
-  Facebook
+  Facebook,
+  MessageCircle
 } from 'lucide-react';
 import { NannyButton } from '@/components/NannyButton';
 import { SectionTitle } from '@/components/SectionTitle';
@@ -443,6 +444,15 @@ const Index = () => {
                 <Facebook size={18} />
               </a>
               <a 
+                href="https://wa.me/32493423478"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-[#25D366] text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle size={18} />
+              </a>
+              <a 
                 href="tel:+32493423478"
                 className="w-9 h-9 rounded-full bg-muted hover:bg-sage text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                 aria-label="Appeler"
@@ -482,7 +492,7 @@ const Index = () => {
               <p className="text-sm text-muted-foreground mb-3">Suivez-nous</p>
               <div className="flex gap-4">
                 <a 
-                  href="https://instagram.com" 
+                  href="https://www.instagram.com/nannysitting" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
@@ -490,12 +500,20 @@ const Index = () => {
                   <Instagram size={24} className="text-primary" />
                 </a>
                 <a 
-                  href="https://facebook.com" 
+                  href="https://facebook.com/nannysitting" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
                 >
                   <Facebook size={24} className="text-primary" />
+                </a>
+                <a 
+                  href="https://wa.me/32493423478"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 rounded-full bg-[#25D366]/10 flex items-center justify-center hover:bg-[#25D366]/20 transition-colors"
+                >
+                  <MessageCircle size={24} className="text-[#25D366]" />
                 </a>
               </div>
             </div>
@@ -706,6 +724,15 @@ const Index = () => {
                 aria-label="Facebook"
               >
                 <Facebook size={20} />
+              </a>
+              <a 
+                href="https://wa.me/32493423478"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[#25D366] transition-all duration-300 hover:scale-110"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle size={20} />
               </a>
             </div>
             
