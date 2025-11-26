@@ -70,6 +70,7 @@ export type Database = {
           adresse_siege: string
           denomination_sociale: string
           email: string | null
+          iban: string | null
           id: string
           logo_url: string | null
           numero_tva: string
@@ -81,6 +82,7 @@ export type Database = {
           adresse_siege?: string
           denomination_sociale?: string
           email?: string | null
+          iban?: string | null
           id?: string
           logo_url?: string | null
           numero_tva?: string
@@ -92,6 +94,7 @@ export type Database = {
           adresse_siege?: string
           denomination_sociale?: string
           email?: string | null
+          iban?: string | null
           id?: string
           logo_url?: string | null
           numero_tva?: string
