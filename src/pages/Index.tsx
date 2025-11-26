@@ -512,9 +512,9 @@ const Index = () => {
                   href="https://wa.me/32493423478?text=Bonjour,%20je%20cherche%20une%20nannysitter%20pour%20mon%20enfant"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-full bg-[#25D366]/10 flex items-center justify-center hover:bg-[#25D366]/20 transition-colors"
+                  className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
                 >
-                  <WhatsAppIcon size={24} className="text-[#25D366]" />
+                  <WhatsAppIcon size={24} className="text-primary" />
                 </a>
               </div>
             </div>
