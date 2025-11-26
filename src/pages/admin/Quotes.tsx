@@ -146,15 +146,15 @@ const Quotes = () => {
   };
 
   const getStatusBadge = (statut: string) => {
-    const variants: Record<string, { variant: any; label: string }> = {
+    const variants: Record<string, { variant: any; label: string; className?: string }> = {
       brouillon: { variant: "secondary", label: "Brouillon" },
       envoye: { variant: "default", label: "Envoyé" },
-      accepte: { variant: "default", label: "Accepté" },
+      accepte: { variant: "default", label: "Accepté", className: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100" },
       refuse: { variant: "destructive", label: "Refusé" },
       expire: { variant: "outline", label: "Expiré" },
     };
     const config = variants[statut] || variants.brouillon;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
   };
 
   return (
@@ -283,19 +283,6 @@ const Quotes = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDownload(quote)}
-                        disabled={downloadingPdf === quote.id}
-                        title="Télécharger le PDF"
-                      >
-                        {downloadingPdf === quote.id ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        ) : (
-                          <Download className="h-4 w-4" />
-                        )}
-                      </Button>
                       {quote.statut !== 'envoye' && quote.statut !== 'accepte' && quote.statut !== 'refuse' && (
                         <Button
                           variant="ghost"
