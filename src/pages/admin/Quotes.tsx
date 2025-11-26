@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2, Send, Receipt, Download } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send, Receipt, Download, Wand2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -212,6 +212,7 @@ const Quotes = () => {
               <TableHead>Date de validité</TableHead>
               <TableHead>Montant TTC</TableHead>
               <TableHead>Statut</TableHead>
+              <TableHead>Facture générée?</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -224,7 +225,7 @@ const Quotes = () => {
               </TableRow>
             ) : filteredQuotes?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
                   <p className="text-muted-foreground">
                     Aucun devis trouvé
@@ -252,6 +253,34 @@ const Quotes = () => {
                   </TableCell>
                   <TableCell>{quote.montant_ttc?.toFixed(2)} €</TableCell>
                   <TableCell>{getStatusBadge(quote.statut || "brouillon")}</TableCell>
+                  <TableCell>
+                    {quote.invoices && quote.invoices.length > 0 ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          // TODO: Implement invoice download
+                          toast.info("Téléchargement de la facture à implémenter");
+                        }}
+                      >
+                        {quote.invoices[0].numero}
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    ) : quote.statut === 'accepte' ? (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="gap-2 text-primary hover:underline p-0 h-auto"
+                        onClick={() => handleGenerateInvoice(quote)}
+                      >
+                        <Wand2 className="h-3 w-3" />
+                        Générer une facture
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -276,21 +305,6 @@ const Quotes = () => {
                         >
                           <Send className="h-4 w-4" />
                         </Button>
-                      )}
-                      {quote.statut === 'accepte' && !quote.invoices?.length && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleGenerateInvoice(quote)}
-                          title="Générer une facture"
-                        >
-                          <Receipt className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {quote.invoices && quote.invoices.length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          Facture: {quote.invoices[0].numero}
-                        </Badge>
                       )}
                       <Button
                         variant="ghost"
