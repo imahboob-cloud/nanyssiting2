@@ -154,9 +154,6 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
           <CheckCircle className="w-20 h-20 mx-auto mb-6 text-white" />
           <h2 className="text-3xl font-bold mb-4 font-heading">Message reçu !</h2>
           <p className="text-xl">Nous avons bien reçu vos informations. Notre coordinatrice vous recontactera sous 24h.</p>
-          <NannyButton variant="secondary" className="mt-8 mx-auto" onClick={() => setSubmitted(false)}>
-            Envoyer une autre demande
-          </NannyButton>
         </div>
       </div>
     );
