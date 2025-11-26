@@ -157,11 +157,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Contact info
     if (invoice.clients?.email) {
       setFontBrand('normal', 8, COLORS.textGray);
-      doc.text(`✉ ${invoice.clients.email}`, margin + 5, yPos + 34);
+      doc.text(`Email: ${invoice.clients.email}`, margin + 5, yPos + 34);
     }
     if (invoice.clients?.telephone) {
       setFontBrand('normal', 8, COLORS.textGray);
-      doc.text(`☎ ${invoice.clients.telephone}`, margin + 5, yPos + 40);
+      doc.text(`Tel: ${invoice.clients.telephone}`, margin + 5, yPos + 40);
     }
 
     // --- DATES (Right side) ---
@@ -331,7 +331,7 @@ const handler = async (req: Request): Promise<Response> => {
     doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
 
     setFontBrand('normal', 8, COLORS.textGray);
-    const footerText = `🌐 ${company.site_web || 'www.nannysitting.be'}   ✉ ${company.email || 'contact@nannysitting.be'}`;
+    const footerText = `${company.site_web || 'www.nannysitting.be'}  |  ${company.email || 'contact@nannysitting.be'}`;
     doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
     
     doc.setFontSize(7);
