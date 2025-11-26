@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -16,8 +17,6 @@ import { format } from 'date-fns';
 const missionSchema = z.object({
   client_id: z.string().min(1, 'Client requis'),
   nannysitter_id: z.string().optional(),
-  date_debut: z.string().min(1, 'Date de début requise'),
-  date_fin: z.string().min(1, 'Date de fin requise'),
   description: z.string().optional(),
   montant: z.string().optional(),
   statut: z.enum(['planifie', 'en_cours', 'termine', 'annule']),
@@ -37,6 +36,8 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [nannysitters, setNannysitters] = useState<any[]>([]);
+  const [dateDebut, setDateDebut] = useState<Date | undefined>(selectedDate || new Date());
+  const [dateFin, setDateFin] = useState<Date | undefined>(selectedDate || new Date());
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<MissionFormData>({
@@ -55,15 +56,14 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
     if (mission) {
       setValue('client_id', mission.client_id);
       setValue('nannysitter_id', mission.nannysitter_id || '');
-      setValue('date_debut', format(new Date(mission.date_debut), "yyyy-MM-dd'T'HH:mm"));
-      setValue('date_fin', format(new Date(mission.date_fin), "yyyy-MM-dd'T'HH:mm"));
+      setDateDebut(new Date(mission.date_debut));
+      setDateFin(new Date(mission.date_fin));
       setValue('description', mission.description || '');
       setValue('montant', mission.montant?.toString() || '');
       setValue('statut', mission.statut);
     } else if (selectedDate) {
-      const dateStr = format(selectedDate, "yyyy-MM-dd'T'09:00");
-      setValue('date_debut', dateStr);
-      setValue('date_fin', dateStr);
+      setDateDebut(selectedDate);
+      setDateFin(selectedDate);
     }
   }, [mission, selectedDate, setValue]);
 
@@ -87,13 +87,22 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   };
 
   const onSubmit = async (data: MissionFormData) => {
+    if (!dateDebut || !dateFin) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner les dates de début et de fin',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const missionData = {
         client_id: data.client_id,
         nannysitter_id: data.nannysitter_id || null,
-        date_debut: data.date_debut,
-        date_fin: data.date_fin,
+        date_debut: dateDebut.toISOString(),
+        date_fin: dateFin.toISOString(),
         description: data.description || null,
         montant: data.montant ? parseFloat(data.montant) : null,
         statut: data.statut,
@@ -170,18 +179,14 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date_debut">Date de début *</Label>
-              <Input type="datetime-local" {...register('date_debut')} />
-              {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label>Date de début *</Label>
+            <DateTimePicker date={dateDebut} setDate={setDateDebut} placeholder="Sélectionner la date de début" />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date_fin">Date de fin *</Label>
-              <Input type="datetime-local" {...register('date_fin')} />
-              {errors.date_fin && <p className="text-sm text-destructive">{errors.date_fin.message}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label>Date de fin *</Label>
+            <DateTimePicker date={dateFin} setDate={setDateFin} placeholder="Sélectionner la date de fin" />
           </div>
 
           <div className="space-y-2">
