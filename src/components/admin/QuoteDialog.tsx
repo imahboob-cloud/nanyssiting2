@@ -50,6 +50,9 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
   const [lignes, setLignes] = useState<QuoteLine[]>([
     { date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }
   ]);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [selectedLigneIndex, setSelectedLigneIndex] = useState<number | null>(null);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<QuoteFormData>({
@@ -111,9 +114,26 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     }]);
   };
 
-  const duplicateLigne = (index: number) => {
-    const ligne = lignes[index];
-    setLignes([...lignes.slice(0, index + 1), { ...ligne }, ...lignes.slice(index + 1)]);
+  const openDuplicateDialog = (index: number) => {
+    setSelectedLigneIndex(index);
+    setSelectedDates([]);
+    setDuplicateDialogOpen(true);
+  };
+
+  const confirmDuplicate = () => {
+    if (selectedLigneIndex === null || selectedDates.length === 0) return;
+    
+    const ligne = lignes[selectedLigneIndex];
+    const newLignes = selectedDates.map(date => ({
+      ...ligne,
+      date: format(date, 'yyyy-MM-dd'),
+    }));
+    
+    setLignes([...lignes.slice(0, selectedLigneIndex + 1), ...newLignes, ...lignes.slice(selectedLigneIndex + 1)]);
+    setDuplicateDialogOpen(false);
+    setSelectedDates([]);
+    setSelectedLigneIndex(null);
+    toast({ title: `${newLignes.length} ligne(s) ajoutée(s)` });
   };
 
   const removeLigne = (index: number) => {
@@ -370,8 +390,8 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => duplicateLigne(index)}
-                      title="Dupliquer"
+                      onClick={() => openDuplicateDialog(index)}
+                      title="Dupliquer sur plusieurs dates"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -445,6 +465,43 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dupliquer sur plusieurs dates</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez les dates sur lesquelles vous souhaitez dupliquer cette ligne
+            </p>
+            <div className="flex justify-center">
+              <Calendar
+                mode="multiple"
+                selected={selectedDates}
+                onSelect={(dates) => setSelectedDates(dates || [])}
+                locale={fr}
+                className="pointer-events-auto border rounded-lg"
+              />
+            </div>
+            <p className="text-sm text-center">
+              {selectedDates.length} date(s) sélectionnée(s)
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDuplicateDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button 
+              type="button" 
+              onClick={confirmDuplicate}
+              disabled={selectedDates.length === 0}
+            >
+              Dupliquer ({selectedDates.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
