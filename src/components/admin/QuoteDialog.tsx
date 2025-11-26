@@ -99,13 +99,15 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       const todayDate = format(new Date(), 'yyyy-MM-dd');
       const appropriateTarif = getAppropriateTarif(todayDate);
       if (appropriateTarif) {
+        const prix = parseFloat(appropriateTarif.tarif_horaire);
+        const hours = calculateHours('09:00', '17:00');
         setLignes([{
           date: todayDate,
           heure_debut: '09:00',
           heure_fin: '17:00',
           description: appropriateTarif.nom,
-          prix_horaire: parseFloat(appropriateTarif.tarif_horaire),
-          total: 0
+          prix_horaire: prix,
+          total: hours * prix
         }]);
       }
     }
@@ -169,14 +171,16 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     const lastLigne = lignes[lignes.length - 1];
     const newDate = lastLigne.date;
     const appropriateTarif = getAppropriateTarif(newDate);
+    const prix = appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0;
+    const hours = calculateHours(lastLigne.heure_debut, lastLigne.heure_fin);
     
     setLignes([...lignes, { 
       date: newDate, 
       heure_debut: lastLigne.heure_debut, 
       heure_fin: lastLigne.heure_fin, 
       description: appropriateTarif?.nom || '', 
-      prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
-      total: 0 
+      prix_horaire: prix, 
+      total: hours * prix 
     }]);
   };
 
@@ -193,12 +197,15 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     const newLignes = selectedDates.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const appropriateTarif = getAppropriateTarif(dateStr);
+      const prix = appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : ligne.prix_horaire;
+      const hours = calculateHours(ligne.heure_debut, ligne.heure_fin);
       
       return {
         ...ligne,
         date: dateStr,
         description: appropriateTarif?.nom || ligne.description,
-        prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : ligne.prix_horaire,
+        prix_horaire: prix,
+        total: hours * prix
       };
     });
     
@@ -296,13 +303,15 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       reset();
       const todayDate = format(new Date(), 'yyyy-MM-dd');
       const appropriateTarif = getAppropriateTarif(todayDate);
+      const prix = appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0;
+      const hours = calculateHours('09:00', '17:00');
       setLignes([{ 
         date: todayDate, 
         heure_debut: '09:00', 
         heure_fin: '17:00', 
         description: appropriateTarif?.nom || '', 
-        prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
-        total: 0 
+        prix_horaire: prix, 
+        total: hours * prix 
       }]);
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 7);
