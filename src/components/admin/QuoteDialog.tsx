@@ -59,7 +59,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       statut: 'brouillon',
-      tva: '21',
+      tva: '0',
     },
   });
 
@@ -71,7 +71,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     if (quote) {
       setValue('client_id', quote.client_id);
       setValue('statut', quote.statut);
-      setValue('tva', quote.tva?.toString() || '21');
+      setValue('tva', quote.tva?.toString() || '0');
       setValue('notes', quote.notes || '');
       if (quote.date_validite) {
         setDateValidite(new Date(quote.date_validite));
@@ -156,7 +156,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
 
   const calculateTotals = () => {
     const montant_ht = lignes.reduce((sum, ligne) => sum + ligne.total, 0);
-    const tvaValue = parseFloat(watch('tva') || '21');
+    const tvaValue = parseFloat(watch('tva') || '0');
     const montant_tva = (montant_ht * tvaValue) / 100;
     const montant_ttc = montant_ht + montant_tva;
     
@@ -177,7 +177,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     setLoading(true);
     try {
       const { montant_ht, montant_ttc } = calculateTotals();
-      const tvaValue = parseFloat(data.tva || '21');
+      const tvaValue = parseFloat(data.tva || '0');
 
       const quoteData = {
         client_id: data.client_id,
