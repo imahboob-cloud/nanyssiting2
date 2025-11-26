@@ -47,6 +47,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
   const [loading, setLoading] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
+  const [tarifs, setTarifs] = useState<any[]>([]);
   const [dateValidite, setDateValidite] = useState<Date | undefined>(() => {
     const defaultDate = new Date();
     defaultDate.setDate(defaultDate.getDate() + 7);
@@ -70,6 +71,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
 
   useEffect(() => {
     loadClients();
+    loadTarifs();
   }, []);
 
   useEffect(() => {
@@ -103,6 +105,16 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       .order('nom', { ascending: true });
     
     if (!error && data) setClients(data);
+  };
+
+  const loadTarifs = async () => {
+    const { data, error } = await supabase
+      .from('tarifs')
+      .select('*')
+      .eq('actif', true)
+      .order('nom', { ascending: true });
+    
+    if (!error && data) setTarifs(data);
   };
 
   const calculateHours = (heureDebut: string, heureFin: string): number => {
@@ -417,11 +429,27 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   </div>
                   <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
-                    <Input
-                      placeholder="Description"
-                      value={ligne.description}
-                      onChange={(e) => updateLigne(index, 'description', e.target.value)}
-                    />
+                    <Select 
+                      value={ligne.description} 
+                      onValueChange={(value) => {
+                        const selectedTarif = tarifs.find(t => t.nom === value);
+                        updateLigne(index, 'description', value);
+                        if (selectedTarif) {
+                          updateLigne(index, 'prix_horaire', parseFloat(selectedTarif.tarif_horaire));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="Sélectionner un tarif" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tarifs.map((tarif) => (
+                          <SelectItem key={tarif.id} value={tarif.nom}>
+                            {tarif.nom}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-1">
                     <Label className="text-xs">Prix/h</Label>
