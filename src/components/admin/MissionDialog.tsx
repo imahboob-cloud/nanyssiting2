@@ -156,12 +156,11 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
 
           <div className="space-y-2">
             <Label htmlFor="nannysitter_id">NannySitter</Label>
-            <Select onValueChange={(value) => setValue('nannysitter_id', value)} value={watch('nannysitter_id')}>
+            <Select onValueChange={(value) => setValue('nannysitter_id', value)} value={watch('nannysitter_id') || undefined}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une nannysitter (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucune</SelectItem>
                 {nannysitters.map((ns) => (
                   <SelectItem key={ns.id} value={ns.id}>
                     {ns.nom} {ns.prenom}
