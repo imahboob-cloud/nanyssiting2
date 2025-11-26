@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2, Mail } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -223,7 +223,7 @@ const Invoices = () => {
                         onClick={() => handleSend(invoice)}
                         title="Envoyer la facture"
                       >
-                        <Mail className="h-4 w-4" />
+                        <Send className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
