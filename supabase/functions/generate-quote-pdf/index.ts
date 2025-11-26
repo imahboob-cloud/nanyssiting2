@@ -20,14 +20,16 @@ interface QuoteLine {
   total: number;
 }
 
-// Brand colors in RGB
+// Brand colors matching the new design
 const BRAND_COLORS = {
-  salmon: { r: 252, g: 159, b: 113 },
-  sage: { r: 138, g: 186, b: 174 },
-  lavender: { r: 244, g: 232, b: 255 },
-  darkText: { r: 46, g: 54, b: 69 },
-  lightText: { r: 100, g: 100, b: 100 },
-  white: { r: 255, g: 255, b: 255 }
+  salmon: { r: 247, g: 155, b: 117 }, // #F79B75
+  sage: { r: 129, g: 183, b: 169 }, // #81B7A9
+  lavender: { r: 210, g: 199, b: 255 }, // #D2C7FF
+  darkText: { r: 45, g: 55, b: 72 }, // #2D3748
+  lightGray: { r: 156, g: 163, b: 175 }, // #9CA3AF
+  lightBg: { r: 255, g: 249, b: 245 }, // #FFF9F5
+  white: { r: 255, g: 255, b: 255 },
+  gray50: { r: 249, g: 250, b: 251 }, // #F9FAFB
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -42,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const { quoteId }: GenerateQuotePdfRequest = await req.json();
-    console.log('Generating branded PDF for quote:', quoteId);
+    console.log('Generating new branded quote PDF for:', quoteId);
 
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
@@ -69,286 +71,348 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: company } = await supabase
       .from('company_info')
       .select('*')
-      .maybeSingle();
+      .single();
 
     const lignes = quote.lignes as QuoteLine[] || [];
     const clientName = quote.clients 
       ? `${quote.clients.prenom} ${quote.clients.nom}` 
       : 'Client';
 
+    // Create PDF with new design
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     
-    // Top decorative band
+    // ==================== TOP COLOR BAND ====================
     doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.rect(0, 0, pageWidth, 8, 'F');
+    doc.rect(0, 0, pageWidth, 4, 'F');
     
-    // Decorative circles
-    doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
-    doc.circle(pageWidth - 20, 15, 12, 'F');
-    doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-    doc.circle(15, 12, 8, 'F');
+    // ==================== DECORATIVE SHAPES ====================
+    // Top right salmon circle (opacity effect via lighter color)
+    doc.setFillColor(252, 234, 226); // Lighter salmon for opacity effect
+    doc.circle(pageWidth - 30, 15, 15, 'F');
     
-    // Company name
+    // Top left sage circle
+    doc.setFillColor(229, 242, 238); // Lighter sage for opacity effect
+    doc.circle(15, 15, 12, 'F');
+    
+    // ==================== HEADER ====================
+    let yPos = 20;
+    
+    // Logo: NannySitting
     doc.setFontSize(28);
-    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('NannySitting', 20, 25);
-    
-    // Tagline
-    doc.setFontSize(10);
-    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
-    doc.setFont('helvetica', 'italic');
-    doc.text('Plus qu\'une garde, une bulle de sérénité', 20, 31);
-    
-    // DEVIS title
-    doc.setFontSize(32);
     doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
     doc.setFont('helvetica', 'bold');
-    doc.text('DEVIS', pageWidth - 20, 25, { align: 'right' });
+    doc.text('NannySitting', 20, yPos);
     
-    // Quote number
-    doc.setFontSize(14);
-    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.text(quote.numero, pageWidth - 20, 32, { align: 'right' });
-    
-    let yPos = 50;
-    
-    // Company info box
-    doc.setDrawColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(20, yPos, 80, 35, 3, 3, 'S');
-    
+    // Slogan
     doc.setFontSize(9);
     doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DE', 25, yPos + 6);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Plus qu\'une garde, une bulle de sérénité', 20, yPos + 4);
     
-    doc.setFontSize(10);
+    // Company details
+    doc.setFontSize(8);
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+    doc.setFont('helvetica', 'normal');
+    let companyY = yPos + 12;
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.text('Garde-Malade et Babysitting', 20, companyY);
+    companyY += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
     if (company) {
-      doc.text(company.denomination_sociale, 25, yPos + 12);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
-      let companyY = yPos + 17;
       if (company.adresse_siege) {
-        const lines = doc.splitTextToSize(company.adresse_siege, 70);
-        doc.text(lines, 25, companyY);
-        companyY += lines.length * 3.5;
+        doc.text(company.adresse_siege, 20, companyY);
+        companyY += 4;
       }
       if (company.numero_tva) {
-        doc.text(`TVA: ${company.numero_tva}`, 25, companyY);
-        companyY += 3.5;
+        doc.text(`TVA: ${company.numero_tva}`, 20, companyY);
+        companyY += 4;
       }
       if (company.telephone) {
-        doc.text(`Tél: ${company.telephone}`, 25, companyY);
+        doc.text(`Tél: ${company.telephone}`, 20, companyY);
       }
     }
     
-    // Client info box
-    doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
-    doc.roundedRect(pageWidth - 100, yPos, 80, 35, 3, 3, 'F');
+    // DEVIS title (big and light)
+    doc.setFontSize(45);
+    doc.setTextColor(226, 232, 240); // Very light gray
+    doc.setFont('helvetica', 'bold');
+    doc.text('DEVIS', pageWidth - 20, yPos + 5, { align: 'right' });
+    
+    // Quote number badge
+    yPos += 10;
+    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    const quoteNumWidth = doc.getTextWidth(`N° ${quote.numero}`) + 8;
+    doc.roundedRect(pageWidth - 20 - quoteNumWidth, yPos - 3, quoteNumWidth, 6, 3, 3, 'F');
     
     doc.setFontSize(9);
-    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
     doc.setFont('helvetica', 'bold');
-    doc.text('POUR', pageWidth - 95, yPos + 6);
+    doc.text(`N° ${quote.numero}`, pageWidth - 20 - quoteNumWidth / 2, yPos, { align: 'center' });
     
-    doc.setFontSize(10);
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.text(clientName, pageWidth - 95, yPos + 12);
+    // ==================== CLIENT & DATES SECTION ====================
+    yPos = 60;
+    const boxWidth = 85;
+    const boxHeight = 40;
     
-    doc.setFont('helvetica', 'normal');
+    // Client box (left) with light background
+    doc.setFillColor(BRAND_COLORS.lightBg.r, BRAND_COLORS.lightBg.g, BRAND_COLORS.lightBg.b);
+    doc.setDrawColor(247, 192, 163); // Light salmon border
+    doc.setLineWidth(0.3);
+    doc.roundedRect(20, yPos, boxWidth, boxHeight, 4, 4, 'FD');
+    
     doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    doc.setTextColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('POUR', 25, yPos + 6);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text(clientName, 25, yPos + 12);
+    
+    doc.setFontSize(8);
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+    doc.setFont('helvetica', 'normal');
     let clientY = yPos + 17;
-    if (quote.clients?.email) {
-      doc.text(quote.clients.email, pageWidth - 95, clientY);
-      clientY += 3.5;
-    }
-    if (quote.clients?.telephone) {
-      doc.text(quote.clients.telephone, pageWidth - 95, clientY);
-      clientY += 3.5;
-    }
     if (quote.clients?.adresse) {
-      const addressLines = doc.splitTextToSize(quote.clients.adresse, 70);
-      doc.text(addressLines, pageWidth - 95, clientY);
-      clientY += addressLines.length * 3.5;
+      doc.text(quote.clients.adresse, 25, clientY);
+      clientY += 3.5;
     }
     if (quote.clients?.code_postal && quote.clients?.ville) {
-      doc.text(`${quote.clients.code_postal} ${quote.clients.ville}`, pageWidth - 95, clientY);
+      doc.text(`${quote.clients.code_postal} ${quote.clients.ville}`, 25, clientY);
+      clientY += 3.5;
     }
     
-    yPos = 95;
+    // Separator line in client box
+    if (clientY < yPos + boxHeight - 8) {
+      doc.setDrawColor(247, 192, 163);
+      doc.setLineWidth(0.2);
+      doc.line(25, clientY + 1, 100, clientY + 1);
+      clientY += 4;
+    }
     
-    // Dates
-    doc.setFontSize(9);
-    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    if (quote.clients?.email) {
+      doc.setFontSize(7);
+      doc.text(`✉ ${quote.clients.email}`, 25, clientY);
+      clientY += 3;
+    }
+    if (quote.clients?.telephone) {
+      doc.setFontSize(7);
+      doc.text(`☎ ${quote.clients.telephone}`, 25, clientY);
+    }
+    
+    // Dates section (right)
+    const rightX = pageWidth - 20 - boxWidth;
+    let dateY = yPos + 8;
+    
+    // Date du devis
+    doc.setFontSize(8);
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
     doc.setFont('helvetica', 'normal');
-    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.circle(22, yPos - 1, 1.5, 'F');
-    doc.text('Date du devis', 27, yPos);
+    doc.text('Date du devis', rightX, dateY);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
     doc.text(new Date(quote.created_at!).toLocaleDateString('fr-FR', { 
       day: '2-digit', 
       month: 'long', 
       year: 'numeric' 
-    }), 70, yPos);
+    }), pageWidth - 20, dateY, { align: 'right' });
     
+    // Separator
+    dateY += 5;
+    doc.setDrawColor(240, 240, 240);
+    doc.setLineWidth(0.2);
+    doc.line(rightX, dateY, pageWidth - 20, dateY);
+    
+    // Date de validité
+    dateY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+    doc.text('Date de validité', rightX, dateY);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
     if (quote.date_validite) {
-      yPos += 6;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
-      doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-      doc.circle(22, yPos - 1, 1.5, 'F');
-      doc.text('Date de validité', 27, yPos);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
       doc.text(new Date(quote.date_validite).toLocaleDateString('fr-FR', { 
         day: '2-digit', 
         month: 'long', 
         year: 'numeric' 
-      }), 70, yPos);
+      }), pageWidth - 20, dateY, { align: 'right' });
+    } else {
+      doc.text('-', pageWidth - 20, dateY, { align: 'right' });
     }
     
-    yPos = 115;
-    doc.setDrawColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.setLineWidth(1);
-    doc.line(20, yPos, pageWidth - 20, yPos);
+    // Notes box
+    if (quote.notes) {
+      dateY += 8;
+      doc.setFillColor(BRAND_COLORS.gray50.r, BRAND_COLORS.gray50.g, BRAND_COLORS.gray50.b);
+      doc.roundedRect(rightX, dateY - 3, boxWidth, 12, 2, 2, 'F');
+      doc.setFontSize(7);
+      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+      doc.setFont('helvetica', 'normal');
+      const notesLines = doc.splitTextToSize(`Notes: ${quote.notes}`, boxWidth - 4);
+      doc.text(notesLines.slice(0, 2), rightX + 2, dateY);
+    }
     
-    yPos = 125;
-    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.roundedRect(20, yPos - 6, pageWidth - 40, 10, 2, 2, 'F');
+    // ==================== TABLE ====================
+    yPos = 110;
     
-    doc.setFontSize(9);
+    // Table header with sage background
+    doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+    doc.roundedRect(20, yPos, pageWidth - 40, 8, 2, 2, 'F');
+    
+    doc.setFontSize(8);
     doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
     doc.setFont('helvetica', 'bold');
-    doc.text('DATE', 25, yPos);
-    doc.text('HORAIRES', 52, yPos);
-    doc.text('DESCRIPTION', 85, yPos);
-    doc.text('PRIX/H', 145, yPos);
-    doc.text('TOTAL', pageWidth - 25, yPos, { align: 'right' });
+    doc.text('DATE', 24, yPos + 5);
+    doc.text('HORAIRES', 48, yPos + 5);
+    doc.text('DESCRIPTION', 80, yPos + 5);
+    doc.text('PRIX/H', 140, yPos + 5, { align: 'right' });
+    doc.text('TOTAL', pageWidth - 24, yPos + 5, { align: 'right' });
     
-    yPos += 8;
-    doc.setFontSize(9);
+    // Table rows
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
     
     lignes.forEach((ligne: QuoteLine, index: number) => {
       if (yPos > 250) {
         doc.addPage();
         yPos = 30;
-        doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-        doc.roundedRect(20, yPos - 6, pageWidth - 40, 10, 2, 2, 'F');
-        doc.setFontSize(9);
+        
+        // Repeat header
+        doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+        doc.roundedRect(20, yPos, pageWidth - 40, 8, 2, 2, 'F');
+        doc.setFontSize(8);
         doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
         doc.setFont('helvetica', 'bold');
-        doc.text('DATE', 25, yPos);
-        doc.text('HORAIRES', 52, yPos);
-        doc.text('DESCRIPTION', 85, yPos);
-        doc.text('PRIX/H', 145, yPos);
-        doc.text('TOTAL', pageWidth - 25, yPos, { align: 'right' });
-        yPos += 8;
+        doc.text('DATE', 24, yPos + 5);
+        doc.text('HORAIRES', 48, yPos + 5);
+        doc.text('DESCRIPTION', 80, yPos + 5);
+        doc.text('PRIX/H', 140, yPos + 5, { align: 'right' });
+        doc.text('TOTAL', pageWidth - 24, yPos + 5, { align: 'right' });
+        yPos += 10;
         doc.setFont('helvetica', 'normal');
       }
       
+      // Alternating row background with hover effect
       if (index % 2 === 0) {
-        doc.setFillColor(250, 250, 250);
-        doc.rect(20, yPos - 5, pageWidth - 40, 7, 'F');
+        doc.setFillColor(248, 250, 252);
+      } else {
+        doc.setFillColor(255, 255, 255);
       }
+      doc.rect(20, yPos - 3, pageWidth - 40, 7, 'F');
       
-      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-      doc.text(new Date(ligne.date).toLocaleDateString('fr-FR'), 25, yPos);
-      doc.text(`${ligne.heure_debut} - ${ligne.heure_fin}`, 52, yPos);
-      const descLines = doc.splitTextToSize(ligne.description, 55);
-      doc.text(descLines[0], 85, yPos);
-      doc.text(`${ligne.prix_horaire.toFixed(2)} €`, 145, yPos);
+      // Row separator
+      doc.setDrawColor(240, 240, 240);
+      doc.setLineWidth(0.1);
+      doc.line(20, yPos + 4, pageWidth - 20, yPos + 4);
+      
+      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+      doc.text(new Date(ligne.date).toLocaleDateString('fr-FR'), 24, yPos);
+      
+      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+      doc.text(`${ligne.heure_debut} - ${ligne.heure_fin}`, 48, yPos);
+      
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-      doc.text(`${ligne.total.toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
+      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+      const descLines = doc.splitTextToSize(ligne.description, 55);
+      doc.text(descLines[0], 80, yPos);
       doc.setFont('helvetica', 'normal');
+      
+      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+      doc.text(`${ligne.prix_horaire.toFixed(2)} €`, 140, yPos, { align: 'right' });
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+      doc.text(`${ligne.total.toFixed(2)} €`, pageWidth - 24, yPos, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      
       yPos += 7;
     });
     
-    yPos += 5;
-    doc.setDrawColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 100, yPos, pageWidth - 20, yPos);
+    // ==================== TOTALS ====================
     yPos += 8;
+    const totalsX = pageWidth - 80;
     
-    doc.setFontSize(10);
-    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    // Total HT
+    doc.setFontSize(9);
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
     doc.setFont('helvetica', 'normal');
-    doc.text('Montant HT', pageWidth - 75, yPos);
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.text('Total HT', totalsX, yPos);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${quote.montant_ht?.toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.text(`${quote.montant_ht?.toFixed(2)} €`, pageWidth - 20, yPos, { align: 'right' });
+    
+    yPos += 5;
+    
+    // TVA
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+    doc.text(`TVA (${quote.tva}%)`, totalsX, yPos);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${((quote.montant_ttc || 0) - (quote.montant_ht || 0)).toFixed(2)} €`, pageWidth - 20, yPos, { align: 'right' });
+    
+    // Separator line
+    yPos += 2;
+    doc.setDrawColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+    doc.setLineWidth(0.2);
+    doc.line(totalsX, yPos, pageWidth - 20, yPos);
+    
     yPos += 6;
     
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
-    doc.text(`TVA (${quote.tva}%)`, pageWidth - 75, yPos);
+    // Total TTC
+    doc.setFontSize(12);
     doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${((quote.montant_ttc || 0) - (quote.montant_ht || 0)).toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
-    yPos += 10;
+    doc.text('Total TTC', totalsX, yPos);
     
-    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.roundedRect(pageWidth - 100, yPos - 8, 80, 15, 3, 3, 'F');
-    doc.setFontSize(12);
-    doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MONTANT TOTAL TTC', pageWidth - 95, yPos);
     doc.setFontSize(16);
-    doc.text(`${quote.montant_ttc?.toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
+    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.text(`${quote.montant_ttc?.toFixed(2)} €`, pageWidth - 20, yPos, { align: 'right' });
     
-    if (quote.notes) {
-      yPos += 20;
-      if (yPos > 240) {
-        doc.addPage();
-        yPos = 30;
-      }
-      doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
-      const notesLines = doc.splitTextToSize(quote.notes, pageWidth - 50);
-      const notesHeight = notesLines.length * 4 + 10;
-      doc.roundedRect(20, yPos - 5, pageWidth - 40, notesHeight, 3, 3, 'F');
-      doc.setFontSize(10);
-      doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Notes', 25, yPos);
-      doc.setFontSize(9);
-      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-      doc.setFont('helvetica', 'normal');
-      doc.text(notesLines, 25, yPos + 5);
-    }
-    
+    // ==================== FOOTER ====================
     const footerY = pageHeight - 20;
-    doc.setDrawColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
-    doc.setLineWidth(0.5);
+    
+    // Bottom gradient bar
+    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.rect(0, pageHeight - 2, pageWidth / 2, 2, 'F');
+    doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
+    doc.rect(pageWidth / 2, pageHeight - 2, pageWidth / 2, 2, 'F');
+    
+    // Footer separator
+    doc.setDrawColor(BRAND_COLORS.gray50.r, BRAND_COLORS.gray50.g, BRAND_COLORS.gray50.b);
+    doc.setLineWidth(0.3);
     doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
-    doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
-    doc.setFont('helvetica', 'italic');
     
-    if (company?.email || company?.site_web) {
-      let footerText = '';
-      if (company.email) footerText += company.email;
-      if (company.site_web) footerText += (footerText ? ' • ' : '') + company.site_web;
-      doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
+    // Footer content
+    doc.setFontSize(7);
+    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
+    doc.setFont('helvetica', 'normal');
+    
+    if (company?.site_web || company?.email) {
+      let footerLeft = '';
+      if (company.site_web) footerLeft += `🌐 ${company.site_web}`;
+      if (company.email) footerLeft += (footerLeft ? '   ✉ ' : '✉ ') + company.email;
+      doc.text(footerLeft, 20, footerY);
     }
     
+    // Page number
     const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
-      doc.text(`Page ${i} sur ${pageCount}`, pageWidth - 20, footerY, { align: 'right' });
-    }
+    doc.text(`Page 1 sur ${pageCount}`, pageWidth - 20, footerY, { align: 'right' });
     
+    // Bottom message
+    doc.setFontSize(6);
+    doc.setTextColor(210, 210, 210);
+    doc.text('MERCI POUR VOTRE CONFIANCE', pageWidth / 2, footerY + 4, { align: 'center' });
+    
+    // Generate PDF as base64
     const pdfBase64 = doc.output('datauristring');
-    console.log('Beautiful branded quote PDF generated successfully');
+    
+    console.log('New branded quote PDF generated successfully');
 
     return new Response(
       JSON.stringify({ 

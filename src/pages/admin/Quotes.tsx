@@ -145,6 +145,31 @@ const Quotes = () => {
     }
   };
 
+  const handleDownloadInvoice = async (invoiceId: string, invoiceNumber: string) => {
+    setDownloadingPdf(invoiceId);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-invoice-pdf', {
+        body: { invoiceId },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Facture-${invoiceNumber}.pdf`;
+        link.click();
+        
+        toast.success('PDF téléchargé avec succès');
+      }
+    } catch (error: any) {
+      console.error('Error downloading invoice PDF:', error);
+      toast.error('Erreur lors du téléchargement du PDF');
+    } finally {
+      setDownloadingPdf(null);
+    }
+  };
+
   const getStatusBadge = (statut: string) => {
     const variants: Record<string, { variant: any; label: string; className?: string }> = {
       brouillon: { variant: "secondary", label: "Brouillon" },
@@ -259,13 +284,17 @@ const Quotes = () => {
                         variant="outline"
                         size="sm"
                         className="gap-2"
-                        onClick={() => {
-                          // TODO: Implement invoice download
-                          toast.info("Téléchargement de la facture à implémenter");
-                        }}
+                        onClick={() => handleDownloadInvoice(quote.invoices![0].id, quote.invoices![0].numero)}
+                        disabled={downloadingPdf === quote.invoices![0].id}
                       >
-                        {quote.invoices[0].numero}
-                        <Download className="h-3 w-3" />
+                        {downloadingPdf === quote.invoices![0].id ? (
+                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <>
+                            {quote.invoices[0].numero}
+                            <Download className="h-3 w-3" />
+                          </>
+                        )}
                       </Button>
                     ) : quote.statut === 'accepte' ? (
                       <Button
