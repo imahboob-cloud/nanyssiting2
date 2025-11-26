@@ -24,6 +24,7 @@ import { NannyButton } from '@/components/NannyButton';
 import { SectionTitle } from '@/components/SectionTitle';
 import { ServiceSelect } from '@/components/ServiceSelect';
 import { PhoneReveal } from '@/components/PhoneReveal';
+import SuccessPopup from '@/components/SuccessPopup';
 import { services, Service } from '@/data/services';
 import { cn } from '@/lib/utils';
 import heroBabysitter from '@/assets/hero-babysitter.jpg';
@@ -106,7 +107,7 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     service: prefilledService || 'Garde à domicile',
     message: ''
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,13 +134,15 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         throw new Error('Erreur lors de l\'envoi du formulaire');
       }
 
-      setSubmitted(true);
-      setTimeout(() => {
-        const formSection = document.getElementById(id);
-        if (formSection) {
-          formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
+      setIsPopupOpen(true);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        service: prefilledService || 'Garde à domicile',
+        message: ''
+      });
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Une erreur est survenue. Veuillez réessayer.');
@@ -148,20 +151,10 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     }
   };
 
-  if (submitted) {
-    return (
-      <div id={id} className="py-20 px-6 bg-sage text-white text-center">
-        <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-md p-12 rounded-[40px]">
-          <CheckCircle className="w-20 h-20 mx-auto mb-6 text-white" />
-          <h2 className="text-3xl font-bold mb-4 font-heading">Message reçu !</h2>
-          <p className="text-xl">Nous avons bien reçu vos informations. Notre coordinatrice vous recontactera sous 24h.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <section id={id} className="py-20 px-6 bg-sage relative overflow-hidden scroll-mt-20">
+    <>
+      <SuccessPopup isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
+      <section id={id} className="py-20 px-6 bg-sage relative overflow-hidden scroll-mt-20">
       <div className="absolute top-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-salmon opacity-10 rounded-full translate-x-1/3 translate-y-1/3"></div>
 
@@ -273,6 +266,7 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         </div>
       </div>
     </section>
+    </>
   );
 };
 
