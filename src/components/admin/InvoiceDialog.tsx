@@ -200,6 +200,9 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
       if (appropriateTarif) {
         newLignes[index].description = appropriateTarif.nom;
         newLignes[index].prix_horaire = parseFloat(appropriateTarif.tarif_horaire);
+        // Recalculate total with new price
+        const hours = calculateHours(newLignes[index].heure_debut, newLignes[index].heure_fin);
+        newLignes[index].total = hours * newLignes[index].prix_horaire;
       }
     }
     
@@ -447,13 +450,13 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                       onChange={(e) => updateLigne(index, 'prix_horaire', parseFloat(e.target.value) || 0)}
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-2">
                     <Label className="text-xs">Total</Label>
                     <Input
-                      type="number"
-                      value={ligne.total.toFixed(2)}
+                      type="text"
+                      value={`${ligne.total.toFixed(2)} €`}
                       disabled
-                      className="bg-muted"
+                      className="bg-muted font-semibold"
                     />
                   </div>
                   <div className="col-span-1">
