@@ -150,6 +150,25 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     }
   };
 
+  const getAppropriateTarif = (date: string) => {
+    const dayOfWeek = getDay(new Date(date));
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+    
+    // Filter tarifs based on day type
+    const appropriateTarifs = tarifs.filter(t => 
+      t.type_jour === 'tous' || 
+      (isWeekend && t.type_jour === 'weekend') || 
+      (!isWeekend && t.type_jour === 'semaine')
+    );
+    
+    // Prioritize specific day type over 'tous'
+    const specificTarif = appropriateTarifs.find(t => 
+      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
+    );
+    
+    return specificTarif || appropriateTarifs[0];
+  };
+
   const addLigne = () => {
     const lastLigne = lignes[lignes.length - 1];
     const newDate = lastLigne.date;
@@ -169,25 +188,6 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     if (lignes.length > 1) {
       setLignes(lignes.filter((_, i) => i !== index));
     }
-  };
-
-  const getAppropriateTarif = (date: string) => {
-    const dayOfWeek = getDay(new Date(date));
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
-    
-    // Filter tarifs based on day type
-    const appropriateTarifs = tarifs.filter(t => 
-      t.type_jour === 'tous' || 
-      (isWeekend && t.type_jour === 'weekend') || 
-      (!isWeekend && t.type_jour === 'semaine')
-    );
-    
-    // Prioritize specific day type over 'tous'
-    const specificTarif = appropriateTarifs.find(t => 
-      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
-    );
-    
-    return specificTarif || appropriateTarifs[0];
   };
 
   const updateLigne = (index: number, field: keyof InvoiceLine, value: any) => {
