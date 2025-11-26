@@ -74,6 +74,24 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     loadTarifs();
   }, []);
 
+  // Initialize first line with appropriate tarif when tarifs are loaded
+  useEffect(() => {
+    if (tarifs.length > 0 && lignes.length === 1 && !lignes[0].description && !quote) {
+      const todayDate = format(new Date(), 'yyyy-MM-dd');
+      const appropriateTarif = getAppropriateTarif(todayDate);
+      if (appropriateTarif) {
+        setLignes([{
+          date: todayDate,
+          heure_debut: '09:00',
+          heure_fin: '17:00',
+          description: appropriateTarif.nom,
+          prix_horaire: parseFloat(appropriateTarif.tarif_horaire),
+          total: 0
+        }]);
+      }
+    }
+  }, [tarifs]);
+
   useEffect(() => {
     if (quote) {
       setValue('client_id', quote.client_id);
@@ -130,12 +148,15 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
 
   const addLigne = () => {
     const lastLigne = lignes[lignes.length - 1];
+    const newDate = lastLigne.date;
+    const appropriateTarif = getAppropriateTarif(newDate);
+    
     setLignes([...lignes, { 
-      date: lastLigne.date, 
+      date: newDate, 
       heure_debut: lastLigne.heure_debut, 
       heure_fin: lastLigne.heure_fin, 
-      description: '', 
-      prix_horaire: lastLigne.prix_horaire, 
+      description: appropriateTarif?.nom || '', 
+      prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
       total: 0 
     }]);
   };
@@ -150,10 +171,17 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     if (selectedLigneIndex === null || selectedDates.length === 0) return;
     
     const ligne = lignes[selectedLigneIndex];
-    const newLignes = selectedDates.map(date => ({
-      ...ligne,
-      date: format(date, 'yyyy-MM-dd'),
-    }));
+    const newLignes = selectedDates.map(date => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const appropriateTarif = getAppropriateTarif(dateStr);
+      
+      return {
+        ...ligne,
+        date: dateStr,
+        description: appropriateTarif?.nom || ligne.description,
+        prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : ligne.prix_horaire,
+      };
+    });
     
     setLignes([...lignes.slice(0, selectedLigneIndex + 1), ...newLignes, ...lignes.slice(selectedLigneIndex + 1)]);
     setDuplicateDialogOpen(false);
@@ -263,7 +291,16 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       }
 
       reset();
-      setLignes([{ date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }]);
+      const todayDate = format(new Date(), 'yyyy-MM-dd');
+      const appropriateTarif = getAppropriateTarif(todayDate);
+      setLignes([{ 
+        date: todayDate, 
+        heure_debut: '09:00', 
+        heure_fin: '17:00', 
+        description: appropriateTarif?.nom || '', 
+        prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
+        total: 0 
+      }]);
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 7);
       setDateValidite(defaultDate);
@@ -458,10 +495,9 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
                     <Input
-                      placeholder="Description"
                       value={ligne.description}
-                      onChange={(e) => updateLigne(index, 'description', e.target.value)}
-                      className="h-9 text-xs"
+                      disabled
+                      className="h-9 text-xs bg-muted"
                     />
                   </div>
                   <div className="col-span-1">
