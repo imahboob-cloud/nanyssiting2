@@ -17,117 +17,156 @@ interface ContactFormRequest {
 }
 
 const createEmailHTML = (data: ContactFormRequest) => {
+  // Split name into firstName and lastName
+  const nameParts = data.name.trim().split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+  
   return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nouvelle demande de contact</title>
-      </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif; background-color: #f6f9fc;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f9fc; padding: 40px 20px;">
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFF9F5; font-family: 'Verdana', sans-serif;">
+
+  <!-- Main Container -->
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #FFF9F5; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        
+        <!-- Card -->
+        <table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 90%;">
+          
+          <!-- Header Brandé (Style Site Web) -->
           <tr>
-            <td align="center">
-              <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <!-- Header -->
+            <td style="background-color: #ffffff; padding: 40px 30px 20px 30px; text-align: center; border-bottom: 1px solid #f0f0f0;">
+              <!-- Logo Container -->
+              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
                 <tr>
-                  <td style="background: linear-gradient(135deg, #8B9C7C 0%, #7A8A6B 100%); padding: 40px; text-align: center;">
-                    <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
-                      📧 Nouvelle demande de contact
-                    </h1>
-                    <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">
-                      NannySitting
-                    </p>
+                  <!-- Icone Cercle -->
+                  <td style="padding-right: 10px;">
+                    <div style="width: 40px; height: 40px; background-color: #F79B75; border-radius: 50%; text-align: center; line-height: 40px; color: #ffffff; font-size: 20px;">
+                      👶
+                    </div>
                   </td>
-                </tr>
-                
-                <!-- Content -->
-                <tr>
-                  <td style="padding: 40px;">
-                    <p style="margin: 0 0 30px 0; color: #333333; font-size: 16px; line-height: 24px;">
-                      Vous avez reçu une nouvelle demande via le formulaire de contact de NannySitting.
-                    </p>
-                    
-                    <hr style="border: none; border-top: 1px solid #e1e8ed; margin: 30px 0;">
-                    
-                    <!-- Contact Details -->
-                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
-                      <tr>
-                        <td style="padding: 12px 0;">
-                          <p style="margin: 0 0 5px 0; color: #8B5CF6; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                            👤 NOM
-                          </p>
-                          <p style="margin: 0; color: #333333; font-size: 16px;">
-                            ${data.name}
-                          </p>
-                        </td>
-                      </tr>
-                      
-                      <tr>
-                        <td style="padding: 12px 0;">
-                          <p style="margin: 0 0 5px 0; color: #8B5CF6; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                            📧 EMAIL
-                          </p>
-                          <p style="margin: 0; color: #333333; font-size: 16px;">
-                            <a href="mailto:${data.email}" style="color: #8B5CF6; text-decoration: none;">
-                              ${data.email}
-                            </a>
-                          </p>
-                        </td>
-                      </tr>
-                      
-                      <tr>
-                        <td style="padding: 12px 0;">
-                          <p style="margin: 0 0 5px 0; color: #8B5CF6; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                            📱 TÉLÉPHONE
-                          </p>
-                          <p style="margin: 0; color: #333333; font-size: 16px;">
-                            <a href="tel:${data.phone}" style="color: #8B5CF6; text-decoration: none;">
-                              ${data.phone}
-                            </a>
-                          </p>
-                        </td>
-                      </tr>
-                      
-                      <tr>
-                        <td style="padding: 12px 0;">
-                          <p style="margin: 0 0 5px 0; color: #8B5CF6; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                            🎯 SERVICE DEMANDÉ
-                          </p>
-                          <p style="margin: 0; color: #333333; font-size: 16px;">
-                            ${data.service}
-                          </p>
-                        </td>
-                      </tr>
-                      
-                      <tr>
-                        <td style="padding: 12px 0;">
-                          <p style="margin: 0 0 5px 0; color: #8B5CF6; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                            💬 MESSAGE
-                          </p>
-                          <div style="margin: 0; color: #333333; font-size: 16px; background-color: #f6f9fc; padding: 16px; border-radius: 6px; border: 1px solid #e1e8ed; white-space: pre-wrap;">
-                            ${data.message || 'Aucun message'}
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <hr style="border: none; border-top: 1px solid #e1e8ed; margin: 30px 0;">
-                    
-                    <!-- Footer -->
-                    <p style="margin: 0; color: #8898aa; font-size: 14px; text-align: center; line-height: 24px;">
-                      NannySitting - Service de garde d'enfants professionnel<br>
-                      <a href="mailto:contact@nannysitting.be" style="color: #8B5CF6; text-decoration: none;">contact@nannysitting.be</a>
-                    </p>
+                  <!-- Texte Logo -->
+                  <td style="font-family: 'Trebuchet MS', sans-serif; font-size: 24px; font-weight: bold; color: #2D3748;">
+                    NannySitting
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
+          <!-- Intro Message -->
+          <tr>
+            <td style="padding: 30px 40px 20px 40px;">
+              <h2 style="margin: 0 0 10px 0; color: #2D3748; font-size: 22px; text-align: center;">Nouvelle demande de contact ! ✨</h2>
+              <p style="margin: 0; color: #718096; line-height: 1.5; text-align: center;">
+                Une famille est intéressée par vos services. Voici les détails pour votre CRM.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Details Section -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                
+                <!-- Row: Prénom & Nom (Séparés) -->
+                <tr>
+                  <td style="padding-bottom: 20px;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <!-- Champ Prénom -->
+                        <td width="50%" style="vertical-align: top; padding-right: 10px;">
+                          <p style="margin: 0 0 5px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Prénom</p>
+                          <div style="background-color: #FFF9F5; padding: 10px; border-radius: 8px; color: #2D3748; font-weight: 600;">
+                            ${firstName}
+                          </div>
+                        </td>
+                        <!-- Champ Nom -->
+                        <td width="50%" style="vertical-align: top; padding-left: 10px;">
+                          <p style="margin: 0 0 5px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Nom</p>
+                          <div style="background-color: #FFF9F5; padding: 10px; border-radius: 8px; color: #2D3748; font-weight: 600;">
+                            ${lastName}
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Row: Service -->
+                <tr>
+                  <td style="padding-bottom: 20px;">
+                    <p style="margin: 0 0 5px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Service souhaité</p>
+                    <span style="display: inline-block; border: 2px solid #F79B75; color: #F79B75; padding: 8px 16px; border-radius: 50px; font-size: 14px; font-weight: bold;">
+                      ${data.service}
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Row: Coordonnées -->
+                <tr>
+                  <td style="padding-bottom: 20px;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td width="50%" style="vertical-align: top; padding-right: 10px;">
+                          <p style="margin: 0 0 5px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Email</p>
+                          <a href="mailto:${data.email}" style="margin: 0; color: #2D3748; text-decoration: none; border-bottom: 1px dotted #2D3748; font-size: 14px;">${data.email}</a>
+                        </td>
+                        <td width="50%" style="vertical-align: top; padding-left: 10px;">
+                          <p style="margin: 0 0 5px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Téléphone</p>
+                          <a href="tel:${data.phone}" style="margin: 0; color: #2D3748; text-decoration: none; font-weight: bold; font-size: 14px;">${data.phone}</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Row: Message Box -->
+                <tr>
+                  <td style="padding-top: 10px; padding-bottom: 30px;">
+                    <p style="margin: 0 0 10px 0; color: #81B7A9; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Détails & Message</p>
+                    <div style="background-color: #F8FAFC; border-left: 4px solid #F79B75; padding: 20px; border-radius: 4px; color: #4A5568; line-height: 1.6; font-style: italic;">
+                      "${data.message || 'Aucun message spécifique'}"
+                    </div>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Action Button Area -->
+          <tr>
+            <td align="center" style="padding: 0 40px 40px 40px;">
+              <a href="mailto:${data.email}?subject=Réponse à votre demande NannySitting - ${data.service}" style="background-color: #F79B75; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 50px; font-weight: bold; display: inline-block; font-family: sans-serif;">
+                Répondre à la famille
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #2D3748; padding: 20px; text-align: center;">
+              <p style="margin: 0; color: #A0AEC0; font-size: 12px;">
+                © 2025 NannySitting - Données prêtes pour automatisation.
+              </p>
+            </td>
+          </tr>
+
         </table>
-      </body>
-    </html>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
   `;
 };
 
