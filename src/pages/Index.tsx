@@ -445,7 +445,7 @@ const Index = () => {
                 <Facebook size={18} />
               </a>
               <a 
-                href="https://wa.me/32493423478"
+                href="https://wa.me/32493423478?text=Bonjour,%20je%20cherche%20une%20nannysitter%20pour%20mon%20enfant"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full bg-muted hover:bg-[#25D366] text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
@@ -509,7 +509,7 @@ const Index = () => {
                   <Facebook size={24} className="text-primary" />
                 </a>
                 <a 
-                  href="https://wa.me/32493423478"
+                  href="https://wa.me/32493423478?text=Bonjour,%20je%20cherche%20une%20nannysitter%20pour%20mon%20enfant"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-12 h-12 rounded-full bg-[#25D366]/10 flex items-center justify-center hover:bg-[#25D366]/20 transition-colors"
@@ -727,7 +727,7 @@ const Index = () => {
                 <Facebook size={20} />
               </a>
               <a 
-                href="https://wa.me/32493423478"
+                href="https://wa.me/32493423478?text=Bonjour,%20je%20cherche%20une%20nannysitter%20pour%20mon%20enfant"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[#25D366] transition-all duration-300 hover:scale-110"
