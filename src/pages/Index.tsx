@@ -23,6 +23,7 @@ import {
 import { NannyButton } from '@/components/NannyButton';
 import { SectionTitle } from '@/components/SectionTitle';
 import { ServiceSelect } from '@/components/ServiceSelect';
+import { PhoneReveal } from '@/components/PhoneReveal';
 import { services, Service } from '@/data/services';
 import { cn } from '@/lib/utils';
 import heroBabysitter from '@/assets/hero-babysitter.jpg';
@@ -647,13 +648,45 @@ const Index = () => {
                   contact@nannysitting.be
                 </a>
               </li>
-              <li className="flex items-center gap-2"><Phone size={16}/> +32 4XX XX XX XX</li>
+              <li>
+                <PhoneReveal number="+32 470 12 34 56" size={16} />
+              </li>
               <li className="flex items-center gap-2"><MapPin size={16}/> Bruxelles & Environs</li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
-          © {new Date().getFullYear()} NannySitting Belgique. Tous droits réservés.
+        
+        {/* Social Links & Copyright */}
+        <div className="border-t border-gray-800 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            {/* Social Media */}
+            <div className="flex items-center gap-4">
+              <span className="text-gray-400 text-sm">Suivez-nous :</span>
+              <a 
+                href="https://instagram.com/nannysitting" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-salmon transition-all duration-300 hover:scale-110"
+                aria-label="Instagram"
+              >
+                <Instagram size={20} />
+              </a>
+              <a 
+                href="https://facebook.com/nannysitting" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-salmon transition-all duration-300 hover:scale-110"
+                aria-label="Facebook"
+              >
+                <Facebook size={20} />
+              </a>
+            </div>
+            
+            {/* Copyright */}
+            <div className="text-center text-gray-500 text-sm">
+              © {new Date().getFullYear()} NannySitting Belgique. Tous droits réservés.
+            </div>
+          </div>
         </div>
       </footer>
     </div>
