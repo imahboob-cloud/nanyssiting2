@@ -1,15 +1,17 @@
 import { format, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Trash2 } from 'lucide-react';
 
 interface WeekViewProps {
   currentDate: Date;
   missions: any[];
   onDayClick: (date: Date) => void;
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
+  onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   statusColors: Record<string, string>;
 }
 
-export function WeekView({ currentDate, missions, onDayClick, onMissionClick, statusColors }: WeekViewProps) {
+export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors }: WeekViewProps) {
   const weekStart = startOfWeek(currentDate, { locale: fr });
   const weekEnd = endOfWeek(currentDate, { locale: fr });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -88,20 +90,29 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
                         e.stopPropagation();
                         onMissionClick(mission, e);
                       }}
-                      className={`absolute inset-x-1 ${statusColors[mission.statut as keyof typeof statusColors]} text-white rounded p-1 text-xs overflow-hidden hover:opacity-80 cursor-pointer shadow-sm z-10`}
+                      className={`absolute inset-x-1 ${statusColors[mission.statut as keyof typeof statusColors]} text-white rounded p-1 text-xs overflow-hidden hover:opacity-80 cursor-pointer shadow-sm z-10 flex items-start justify-between group`}
                       style={{ top: `${top}px`, height: `${height}px` }}
                     >
-                      <div className="font-medium truncate">
-                        {mission.clients?.prenom} {mission.clients?.nom}
-                      </div>
-                      <div className="text-xs opacity-90">
-                        {mission.heure_debut?.slice(0, 5)} - {mission.heure_fin?.slice(0, 5)}
-                      </div>
-                      {mission.nannysitters && (
-                        <div className="text-xs opacity-80 truncate">
-                          {mission.nannysitters.prenom}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {mission.clients?.prenom} {mission.clients?.nom}
                         </div>
-                      )}
+                        <div className="text-xs opacity-90">
+                          {mission.heure_debut?.slice(0, 5)} - {mission.heure_fin?.slice(0, 5)}
+                        </div>
+                        {mission.nannysitters && (
+                          <div className="text-xs opacity-80 truncate">
+                            {mission.nannysitters.prenom}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => onDeleteMission(mission.id, e)}
+                        className="opacity-0 group-hover:opacity-100 ml-1 hover:text-red-200 transition-opacity flex-shrink-0"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
                     </div>
                   );
                 })}

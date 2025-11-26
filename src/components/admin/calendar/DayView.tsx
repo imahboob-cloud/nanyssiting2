@@ -1,15 +1,17 @@
 import { format, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Trash2 } from 'lucide-react';
 
 interface DayViewProps {
   currentDate: Date;
   missions: any[];
   onDayClick: (date: Date) => void;
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
+  onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   statusColors: Record<string, string>;
 }
 
-export function DayView({ currentDate, missions, onDayClick, onMissionClick, statusColors }: DayViewProps) {
+export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors }: DayViewProps) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const getMissionsForDay = () => {
@@ -84,30 +86,39 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, sta
                   e.stopPropagation();
                   onMissionClick(mission, e);
                 }}
-                className={`absolute inset-x-2 ${statusColors[mission.statut as keyof typeof statusColors]} text-white rounded-lg p-3 overflow-hidden hover:opacity-80 cursor-pointer shadow-md z-10`}
+                className={`absolute inset-x-2 ${statusColors[mission.statut as keyof typeof statusColors]} text-white rounded-lg p-3 overflow-hidden hover:opacity-80 cursor-pointer shadow-md z-10 flex items-start justify-between group`}
                 style={{ top: `${top}px`, height: `${height}px` }}
               >
-                <div className="font-semibold text-base">
-                  {mission.clients?.prenom} {mission.clients?.nom}
-                </div>
-                <div className="text-sm opacity-90 mt-1">
-                  {mission.heure_debut?.slice(0, 5)} - {mission.heure_fin?.slice(0, 5)}
-                </div>
-                {mission.nannysitters && (
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-base">
+                    {mission.clients?.prenom} {mission.clients?.nom}
+                  </div>
                   <div className="text-sm opacity-90 mt-1">
-                    👤 {mission.nannysitters.prenom} {mission.nannysitters.nom}
+                    {mission.heure_debut?.slice(0, 5)} - {mission.heure_fin?.slice(0, 5)}
                   </div>
-                )}
-                {mission.description && (
-                  <div className="text-sm opacity-80 mt-2 line-clamp-2">
-                    {mission.description}
-                  </div>
-                )}
-                {mission.montant && (
-                  <div className="text-sm font-medium mt-1">
-                    {mission.montant}€
-                  </div>
-                )}
+                  {mission.nannysitters && (
+                    <div className="text-sm opacity-90 mt-1">
+                      👤 {mission.nannysitters.prenom} {mission.nannysitters.nom}
+                    </div>
+                  )}
+                  {mission.description && (
+                    <div className="text-sm opacity-80 mt-2 line-clamp-2">
+                      {mission.description}
+                    </div>
+                  )}
+                  {mission.montant && (
+                    <div className="text-sm font-medium mt-1">
+                      {mission.montant}€
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={(e) => onDeleteMission(mission.id, e)}
+                  className="opacity-0 group-hover:opacity-100 ml-2 hover:text-red-200 transition-opacity flex-shrink-0"
+                  title="Supprimer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             );
           })}
