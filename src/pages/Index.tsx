@@ -106,6 +106,9 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     lastName: '',
     email: '',
     phone: '',
+    address: '',
+    postalCode: '',
+    city: '',
     service: prefilledService || 'Garde à domicile',
     message: ''
   });
@@ -127,6 +130,9 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           phone: formData.phone,
+          address: formData.address,
+          postalCode: formData.postalCode,
+          city: formData.city,
           service: formData.service,
           message: formData.message
         })
@@ -142,6 +148,9 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         lastName: '',
         email: '',
         phone: '',
+        address: '',
+        postalCode: '',
+        city: '',
         service: prefilledService || 'Garde à domicile',
         message: ''
       });
@@ -238,8 +247,44 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">
+                  Adresse (lieu de prestation)
+                </label>
+                <input 
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  className="w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors"
+                  placeholder="Rue et numéro où se déroulera la garde"
+                />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">Code Postal</label>
+                  <input 
+                    type="text"
+                    value={formData.postalCode}
+                    onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                    className="w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors"
+                    placeholder="1000"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">Ville</label>
+                  <input 
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                    className="w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors"
+                    placeholder="Bruxelles"
+                  />
+                </div>
+              </div>
               
-              <ServiceSelect 
+              <ServiceSelect
                 value={formData.service}
                 onChange={(value) => setFormData({...formData, service: value})}
               />

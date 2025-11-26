@@ -150,8 +150,13 @@ export function ClientDialog({ open, onOpenChange, client, onSave, loading = fal
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="adresse">Adresse</Label>
-              <Input id="adresse" {...register('adresse')} disabled={loading} />
+              <Label htmlFor="adresse">Adresse (lieu de prestation)</Label>
+              <Input 
+                id="adresse" 
+                {...register('adresse')} 
+                disabled={loading}
+                placeholder="Rue et numéro où la babysitter devra se rendre"
+              />
               {errors.adresse && <p className="text-sm text-destructive">{errors.adresse.message}</p>}
             </div>
 
