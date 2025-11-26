@@ -13,23 +13,22 @@ interface GenerateInvoicePdfRequest {
 
 interface InvoiceLine {
   date: string;
-  heure_debut: string;
-  heure_fin: string;
+  heure_debut?: string;
+  heure_fin?: string;
   description: string;
-  prix_horaire: number;
+  prix_horaire?: number;
   total: number;
 }
 
-// Brand colors matching the new design
-const BRAND_COLORS = {
-  salmon: { r: 247, g: 155, b: 117 }, // #F79B75
-  sage: { r: 129, g: 183, b: 169 }, // #81B7A9
-  lavender: { r: 210, g: 199, b: 255 }, // #D2C7FF
-  darkText: { r: 45, g: 55, b: 72 }, // #2D3748
-  lightGray: { r: 156, g: 163, b: 175 }, // #9CA3AF
-  lightBg: { r: 255, g: 249, b: 245 }, // #FFF9F5
-  white: { r: 255, g: 255, b: 255 },
-  gray50: { r: 249, g: 250, b: 251 }, // #F9FAFB
+// Brand colors (Matching your React Design)
+const COLORS = {
+  salmon: [247, 155, 117], // #F79B75
+  sage: [129, 183, 169],   // #81B7A9
+  lavender: [210, 199, 255], // #D2C7FF
+  textDark: [45, 55, 72],  // #2D3748
+  textGray: [113, 128, 150], // #718096
+  bgLight: [255, 249, 245], // #FFF9F5
+  white: [255, 255, 255],
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -44,377 +43,311 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const { invoiceId }: GenerateInvoicePdfRequest = await req.json();
-    console.log('Generating new branded invoice PDF for:', invoiceId);
+    console.log('Generating premium invoice PDF for:', invoiceId);
 
-    // Fetch invoice with client info
+    // 1. Fetch Data
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
         *,
         clients (
-          nom,
-          prenom,
-          email,
-          telephone,
-          adresse,
-          code_postal,
-          ville
+          nom, prenom, email, telephone, adresse, code_postal, ville
         )
       `)
       .eq('id', invoiceId)
       .single();
 
-    if (invoiceError || !invoice) {
-      console.error('Error fetching invoice:', invoiceError);
-      throw new Error('Facture introuvable');
-    }
+    if (invoiceError || !invoice) throw new Error('Facture introuvable');
 
     // Fetch company info
-    const { data: company } = await supabase
-      .from('company_info')
-      .select('*')
-      .single();
+    const { data: companyData } = await supabase.from('company_info').select('*').single();
+    const company = companyData || {
+      denomination_sociale: 'Garde-Malade et Babysitting',
+      adresse_siege: 'Rue Emile Dury 164',
+      numero_tva: 'BE74293324792',
+      telephone: '+971 58 598 4937',
+      email: 'contact@nannysitting.be',
+      site_web: 'www.nannysitting.be'
+    };
 
     const lignes = invoice.lignes as InvoiceLine[] || [];
     const clientName = invoice.clients 
       ? `${invoice.clients.prenom} ${invoice.clients.nom}` 
       : 'Client';
-
-    // Create PDF with new design
+    
+    // 2. Initialize PDF
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    
-    // ==================== TOP COLOR BAND ====================
-    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    const margin = 15;
+
+    // --- HELPER FUNCTIONS ---
+    const setFontBrand = (style: 'bold' | 'normal' = 'normal', size = 10, color = COLORS.textDark) => {
+      doc.setFont("helvetica", style);
+      doc.setFontSize(size);
+      doc.setTextColor(color[0], color[1], color[2]);
+    };
+
+    // --- DESIGN ELEMENT: HEADER BACKGROUNDS ---
+    // Top strip
+    doc.setFillColor(COLORS.salmon[0], COLORS.salmon[1], COLORS.salmon[2]);
     doc.rect(0, 0, pageWidth, 4, 'F');
-    
-    // ==================== DECORATIVE SHAPES ====================
-    // Top right salmon circle (opacity effect via lighter color)
-    doc.setFillColor(252, 234, 226); // Lighter salmon for opacity effect
-    doc.circle(pageWidth - 30, 15, 15, 'F');
-    
-    // Top left sage circle
-    doc.setFillColor(229, 242, 238); // Lighter sage for opacity effect
-    doc.circle(15, 15, 12, 'F');
-    
-    // ==================== HEADER ====================
-    let yPos = 20;
-    
-    // Logo: NannySitting
-    doc.setFontSize(28);
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('NannySitting', 20, yPos);
+
+    // Organic Shapes (Blobs simulation using circles with lighter colors for transparency effect)
+    doc.setFillColor(252, 234, 226); // Light salmon
+    doc.circle(pageWidth, 0, 60, 'F'); // Top right blob
+
+    doc.setFillColor(229, 242, 238); // Light sage
+    doc.circle(0, 40, 40, 'F'); // Left side blob
+
+    // --- HEADER CONTENT ---
+    let yPos = 30;
+
+    // Logo (Text based as requested)
+    setFontBrand('bold', 28, COLORS.textDark);
+    doc.text("NannySitting", margin, yPos);
     
     // Slogan
-    doc.setFontSize(9);
-    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Plus qu\'une garde, une bulle de sérénité', 20, yPos + 4);
+    setFontBrand('normal', 10, COLORS.salmon);
+    doc.text("Plus qu'une garde, une bulle de sérénité", margin, yPos + 6);
+
+    // Company Info (Left side, below logo)
+    yPos += 25;
+    setFontBrand('bold', 9, COLORS.textDark);
+    doc.text(company.denomination_sociale || 'Garde-Malade et Babysitting', margin, yPos);
+    setFontBrand('normal', 9, COLORS.textGray);
+    doc.text(company.adresse_siege || '', margin, yPos + 5);
+    doc.text(`TVA: ${company.numero_tva || ''}`, margin, yPos + 10);
+    doc.text(`Tél: ${company.telephone || ''}`, margin, yPos + 15);
+
+    // Invoice Title & Number (Right side)
+    const rightMargin = pageWidth - margin;
+    setFontBrand('bold', 32, [226, 232, 240]); // Very light gray for "FACTURE" background feel
+    doc.text("FACTURE", rightMargin, 30, { align: 'right' });
+
+    // Invoice Number Pill
+    doc.setFillColor(COLORS.salmon[0], COLORS.salmon[1], COLORS.salmon[2]);
+    doc.roundedRect(rightMargin - 60, 35, 60, 10, 5, 5, 'F');
+    setFontBrand('bold', 12, COLORS.white);
+    doc.text(`N° ${invoice.numero || 'INV-001'}`, rightMargin - 5, 41.5, { align: 'right' });
+
+    // --- CLIENT CARD ---
+    yPos = 85;
     
-    // Company details
-    doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.setFont('helvetica', 'normal');
-    let companyY = yPos + 12;
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.text('Garde-Malade et Babysitting', 20, companyY);
-    companyY += 4;
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    if (company) {
-      if (company.adresse_siege) {
-        doc.text(company.adresse_siege, 20, companyY);
-        companyY += 4;
-      }
-      if (company.numero_tva) {
-        doc.text(`TVA: ${company.numero_tva}`, 20, companyY);
-        companyY += 4;
-      }
-      if (company.telephone) {
-        doc.text(`Tél: ${company.telephone}`, 20, companyY);
-      }
-    }
+    // Background Card
+    doc.setFillColor(COLORS.bgLight[0], COLORS.bgLight[1], COLORS.bgLight[2]);
+    doc.setDrawColor(254, 215, 170); // Light orange border
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, yPos, 90, 45, 3, 3, 'FD');
+
+    // Label
+    setFontBrand('bold', 8, COLORS.sage);
+    doc.text("FACTURÉ À", margin + 5, yPos - 3);
+
+    // Content inside card
+    setFontBrand('bold', 11, COLORS.textDark);
+    doc.text(clientName, margin + 5, yPos + 10);
     
-    // FACTURE title (big and light)
-    doc.setFontSize(45);
-    doc.setTextColor(226, 232, 240); // Very light gray
-    doc.setFont('helvetica', 'bold');
-    doc.text('FACTURE', pageWidth - 20, yPos + 5, { align: 'right' });
+    setFontBrand('normal', 10, COLORS.textGray);
+    const clientAddress = invoice.clients ? invoice.clients.adresse : '';
+    const clientCity = invoice.clients ? `${invoice.clients.code_postal} ${invoice.clients.ville}` : '';
+    doc.text(clientAddress || '', margin + 5, yPos + 18);
+    doc.text(clientCity || '', margin + 5, yPos + 24);
     
-    // Invoice number badge
-    yPos += 10;
-    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    const invoiceNumWidth = doc.getTextWidth(`N° ${invoice.numero}`) + 8;
-    doc.roundedRect(pageWidth - 20 - invoiceNumWidth, yPos - 3, invoiceNumWidth, 6, 3, 3, 'F');
-    
-    doc.setFontSize(9);
-    doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`N° ${invoice.numero}`, pageWidth - 20 - invoiceNumWidth / 2, yPos, { align: 'center' });
-    
-    // ==================== CLIENT & DATES SECTION ====================
-    yPos = 60;
-    const boxWidth = 85;
-    const boxHeight = 40;
-    
-    // Client box (left) with light background
-    doc.setFillColor(BRAND_COLORS.lightBg.r, BRAND_COLORS.lightBg.g, BRAND_COLORS.lightBg.b);
-    doc.setDrawColor(247, 192, 163); // Light salmon border
-    doc.setLineWidth(0.3);
-    doc.roundedRect(20, yPos, boxWidth, boxHeight, 4, 4, 'FD');
-    
-    doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FACTURÉ À', 25, yPos + 6);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text(clientName, 25, yPos + 12);
-    
-    doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.setFont('helvetica', 'normal');
-    let clientY = yPos + 17;
-    if (invoice.clients?.adresse) {
-      doc.text(invoice.clients.adresse, 25, clientY);
-      clientY += 3.5;
-    }
-    if (invoice.clients?.code_postal && invoice.clients?.ville) {
-      doc.text(`${invoice.clients.code_postal} ${invoice.clients.ville}`, 25, clientY);
-      clientY += 3.5;
-    }
-    
-    // Separator line in client box
-    if (clientY < yPos + boxHeight - 8) {
-      doc.setDrawColor(247, 192, 163);
-      doc.setLineWidth(0.2);
-      doc.line(25, clientY + 1, 100, clientY + 1);
-      clientY += 4;
-    }
-    
+    // Contact info
     if (invoice.clients?.email) {
-      doc.setFontSize(7);
-      doc.text(`✉ ${invoice.clients.email}`, 25, clientY);
-      clientY += 3;
+      setFontBrand('normal', 8, COLORS.textGray);
+      doc.text(`✉ ${invoice.clients.email}`, margin + 5, yPos + 34);
     }
     if (invoice.clients?.telephone) {
-      doc.setFontSize(7);
-      doc.text(`☎ ${invoice.clients.telephone}`, 25, clientY);
+      setFontBrand('normal', 8, COLORS.textGray);
+      doc.text(`☎ ${invoice.clients.telephone}`, margin + 5, yPos + 40);
     }
+
+    // --- DATES (Right side) ---
+    const dateX = 130;
+    const dateY = yPos + 5;
     
-    // Dates section (right)
-    const rightX = pageWidth - 20 - boxWidth;
-    let dateY = yPos + 8;
-    
-    // Date d'émission
-    doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Date d\'émission', rightX, dateY);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.text(new Date(invoice.created_at!).toLocaleDateString('fr-FR', { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric' 
-    }), pageWidth - 20, dateY, { align: 'right' });
-    
-    // Separator
-    dateY += 5;
+    setFontBrand('normal', 10, COLORS.textGray);
+    doc.text("Date d'émission", dateX, dateY);
+    setFontBrand('bold', 10, COLORS.textDark);
+    const dateEmission = new Date(invoice.created_at!).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+    doc.text(dateEmission, rightMargin, dateY, { align: 'right' });
+
+    // Ligne separator
     doc.setDrawColor(240, 240, 240);
     doc.setLineWidth(0.2);
-    doc.line(rightX, dateY, pageWidth - 20, dateY);
-    
-    // Date d'échéance
-    dateY += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.text('Date d\'échéance', rightX, dateY);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.line(dateX, dateY + 4, rightMargin, dateY + 4);
+
+    setFontBrand('normal', 10, COLORS.textGray);
+    doc.text("Date d'échéance", dateX, dateY + 12);
+    setFontBrand('bold', 10, COLORS.salmon);
     if (invoice.date_echeance) {
-      doc.text(new Date(invoice.date_echeance).toLocaleDateString('fr-FR', { 
-        day: '2-digit', 
-        month: 'long', 
-        year: 'numeric' 
-      }), pageWidth - 20, dateY, { align: 'right' });
+      const dateEcheance = new Date(invoice.date_echeance).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+      doc.text(dateEcheance, rightMargin, dateY + 12, { align: 'right' });
     } else {
-      doc.text('-', pageWidth - 20, dateY, { align: 'right' });
+      doc.text('-', rightMargin, dateY + 12, { align: 'right' });
     }
-    
-    // Notes box
+
+    // Note box
     if (invoice.notes) {
-      dateY += 8;
-      doc.setFillColor(BRAND_COLORS.gray50.r, BRAND_COLORS.gray50.g, BRAND_COLORS.gray50.b);
-      doc.roundedRect(rightX, dateY - 3, boxWidth, 12, 2, 2, 'F');
-      doc.setFontSize(7);
-      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-      doc.setFont('helvetica', 'normal');
-      const notesLines = doc.splitTextToSize(`Notes: ${invoice.notes}`, boxWidth - 4);
-      doc.text(notesLines.slice(0, 2), rightX + 2, dateY);
+      doc.setFillColor(249, 250, 251); // Gray 50
+      doc.roundedRect(dateX, dateY + 20, rightMargin - dateX, 15, 2, 2, 'F');
+      setFontBrand('normal', 8, COLORS.textGray);
+      const noteLines = doc.splitTextToSize(`Notes: ${invoice.notes}`, rightMargin - dateX - 6);
+      doc.text(noteLines.slice(0, 2), dateX + 3, dateY + 28);
     }
-    
-    // ==================== TABLE ====================
-    yPos = 110;
-    
-    // Table header with sage background
-    doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-    doc.roundedRect(20, yPos, pageWidth - 40, 8, 2, 2, 'F');
-    
-    doc.setFontSize(8);
-    doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DATE', 24, yPos + 5);
-    doc.text('HORAIRES', 48, yPos + 5);
-    doc.text('DESCRIPTION', 80, yPos + 5);
-    doc.text('PRIX/H', 140, yPos + 5, { align: 'right' });
-    doc.text('TOTAL', pageWidth - 24, yPos + 5, { align: 'right' });
-    
-    // Table rows
+
+    // --- TABLE ---
+    yPos = 145;
+
+    // Header Background
+    doc.setFillColor(COLORS.sage[0], COLORS.sage[1], COLORS.sage[2]);
+    doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 10, 2, 2, 'F');
+
+    // Headers Text
+    setFontBrand('bold', 9, COLORS.white);
+    doc.text("DATE", margin + 5, yPos + 6.5);
+    doc.text("HORAIRES", margin + 40, yPos + 6.5);
+    doc.text("DESCRIPTION", margin + 80, yPos + 6.5);
+    doc.text("PRIX/H", pageWidth - 45, yPos + 6.5, { align: 'right' });
+    doc.text("TOTAL", rightMargin - 5, yPos + 6.5, { align: 'right' });
+
     yPos += 10;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    
-    lignes.forEach((ligne: InvoiceLine, index: number) => {
-      if (yPos > 250) {
+
+    // Rows
+    lignes.forEach((ligne, index) => {
+      // Check page break
+      if (yPos > pageHeight - 60) {
         doc.addPage();
-        yPos = 30;
+        yPos = 20;
         
-        // Repeat header
-        doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
-        doc.roundedRect(20, yPos, pageWidth - 40, 8, 2, 2, 'F');
-        doc.setFontSize(8);
-        doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
-        doc.setFont('helvetica', 'bold');
-        doc.text('DATE', 24, yPos + 5);
-        doc.text('HORAIRES', 48, yPos + 5);
-        doc.text('DESCRIPTION', 80, yPos + 5);
-        doc.text('PRIX/H', 140, yPos + 5, { align: 'right' });
-        doc.text('TOTAL', pageWidth - 24, yPos + 5, { align: 'right' });
+        // Re-draw header on new page
+        doc.setFillColor(COLORS.sage[0], COLORS.sage[1], COLORS.sage[2]);
+        doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 10, 2, 2, 'F');
+        setFontBrand('bold', 9, COLORS.white);
+        doc.text("DATE", margin + 5, yPos + 6.5);
+        doc.text("HORAIRES", margin + 40, yPos + 6.5);
+        doc.text("DESCRIPTION", margin + 80, yPos + 6.5);
+        doc.text("PRIX/H", pageWidth - 45, yPos + 6.5, { align: 'right' });
+        doc.text("TOTAL", rightMargin - 5, yPos + 6.5, { align: 'right' });
         yPos += 10;
-        doc.setFont('helvetica', 'normal');
       }
-      
-      // Alternating row background with hover effect
-      if (index % 2 === 0) {
-        doc.setFillColor(248, 250, 252);
-      } else {
-        doc.setFillColor(255, 255, 255);
+
+      // Zebra striping
+      if (index % 2 === 1) {
+        doc.setFillColor(248, 250, 252); // Very light gray
+        doc.rect(margin, yPos, pageWidth - (margin * 2), 10, 'F');
       }
-      doc.rect(20, yPos - 3, pageWidth - 40, 7, 'F');
-      
-      // Row separator
-      doc.setDrawColor(240, 240, 240);
+
+      // Subtle row separator
+      doc.setDrawColor(245, 245, 245);
       doc.setLineWidth(0.1);
-      doc.line(20, yPos + 4, pageWidth - 20, yPos + 4);
+      doc.line(margin, yPos + 10, pageWidth - margin, yPos + 10);
+
+      setFontBrand('normal', 9, COLORS.textDark);
       
-      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-      doc.text(new Date(ligne.date).toLocaleDateString('fr-FR'), 24, yPos);
-      
-      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-      doc.text(`${ligne.heure_debut} - ${ligne.heure_fin}`, 48, yPos);
-      
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-      const descLines = doc.splitTextToSize(ligne.description, 55);
-      doc.text(descLines[0], 80, yPos);
-      doc.setFont('helvetica', 'normal');
-      
-      doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-      doc.text(`${ligne.prix_horaire.toFixed(2)} €`, 140, yPos, { align: 'right' });
-      
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-      doc.text(`${ligne.total.toFixed(2)} €`, pageWidth - 24, yPos, { align: 'right' });
-      doc.setFont('helvetica', 'normal');
-      
-      yPos += 7;
+      // Date
+      const dateLine = new Date(ligne.date).toLocaleDateString('fr-FR');
+      doc.text(dateLine, margin + 5, yPos + 6.5);
+
+      // Horaires
+      const horaires = ligne.heure_debut && ligne.heure_fin 
+        ? `${ligne.heure_debut.slice(0,5)} - ${ligne.heure_fin.slice(0,5)}` 
+        : '-';
+      setFontBrand('normal', 9, COLORS.textGray);
+      doc.text(horaires, margin + 40, yPos + 6.5);
+
+      // Description (Truncate if too long)
+      setFontBrand('bold', 9, COLORS.textDark);
+      let desc = ligne.description;
+      if (desc.length > 35) desc = desc.substring(0, 32) + '...';
+      doc.text(desc, margin + 80, yPos + 6.5);
+
+      // Prix/h
+      setFontBrand('normal', 9, COLORS.textGray);
+      const prix = ligne.prix_horaire ? `${ligne.prix_horaire.toFixed(2)} €` : '-';
+      doc.text(prix, pageWidth - 45, yPos + 6.5, { align: 'right' });
+
+      // Total Line
+      setFontBrand('bold', 9, COLORS.salmon);
+      doc.text(`${ligne.total.toFixed(2)} €`, rightMargin - 5, yPos + 6.5, { align: 'right' });
+
+      yPos += 10;
     });
-    
-    // ==================== TOTALS ====================
-    yPos += 8;
+
+    // --- TOTALS SECTION ---
+    yPos += 10;
     const totalsX = pageWidth - 80;
-    
+
     // Total HT
-    doc.setFontSize(9);
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Total HT', totalsX, yPos);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.text(`${invoice.montant_ht?.toFixed(2)} €`, pageWidth - 20, yPos, { align: 'right' });
-    
-    yPos += 5;
+    setFontBrand('normal', 10, COLORS.textGray);
+    doc.text("Total HT", totalsX, yPos);
+    setFontBrand('bold', 10, COLORS.textDark);
+    doc.text(`${invoice.montant_ht?.toFixed(2) || '0.00'} €`, rightMargin, yPos, { align: 'right' });
+
+    yPos += 8;
     
     // TVA
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.text(`TVA (${invoice.tva}%)`, totalsX, yPos);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${((invoice.montant_ttc || 0) - (invoice.montant_ht || 0)).toFixed(2)} €`, pageWidth - 20, yPos, { align: 'right' });
-    
-    // Separator line
-    yPos += 2;
-    doc.setDrawColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.setLineWidth(0.2);
-    doc.line(totalsX, yPos, pageWidth - 20, yPos);
-    
-    yPos += 6;
-    
+    setFontBrand('normal', 10, COLORS.textGray);
+    doc.text(`TVA (${invoice.tva || 0}%)`, totalsX, yPos);
+    setFontBrand('bold', 10, COLORS.textDark);
+    const montantTva = ((invoice.montant_ttc || 0) - (invoice.montant_ht || 0));
+    doc.text(`${montantTva.toFixed(2)} €`, rightMargin, yPos, { align: 'right' });
+
+    // Separator
+    yPos += 5;
+    doc.setDrawColor(COLORS.sage[0], COLORS.sage[1], COLORS.sage[2]);
+    doc.setLineWidth(0.5);
+    doc.line(totalsX, yPos, rightMargin, yPos);
+
     // Total TTC
-    doc.setFontSize(12);
-    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Total TTC', totalsX, yPos);
-    
-    doc.setFontSize(16);
-    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
-    doc.text(`${invoice.montant_ttc?.toFixed(2)} €`, pageWidth - 20, yPos, { align: 'right' });
-    
-    // ==================== FOOTER ====================
+    yPos += 10;
+    setFontBrand('bold', 14, COLORS.textDark);
+    doc.text("Total TTC", totalsX, yPos);
+    setFontBrand('bold', 16, COLORS.salmon);
+    doc.text(`${invoice.montant_ttc?.toFixed(2) || '0.00'} €`, rightMargin, yPos, { align: 'right' });
+
+    // --- FOOTER ---
     const footerY = pageHeight - 20;
     
-    // Bottom gradient bar
-    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    // Decorative bottom gradient bar
+    doc.setFillColor(COLORS.salmon[0], COLORS.salmon[1], COLORS.salmon[2]);
     doc.rect(0, pageHeight - 2, pageWidth / 2, 2, 'F');
-    doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
+    doc.setFillColor(COLORS.lavender[0], COLORS.lavender[1], COLORS.lavender[2]);
     doc.rect(pageWidth / 2, pageHeight - 2, pageWidth / 2, 2, 'F');
-    
-    // Footer separator
-    doc.setDrawColor(BRAND_COLORS.gray50.r, BRAND_COLORS.gray50.g, BRAND_COLORS.gray50.b);
+
+    // Footer separator line
+    doc.setDrawColor(240, 240, 240);
     doc.setLineWidth(0.3);
-    doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+
+    setFontBrand('normal', 8, COLORS.textGray);
+    const footerText = `🌐 ${company.site_web || 'www.nannysitting.be'}   ✉ ${company.email || 'contact@nannysitting.be'}`;
+    doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
     
-    // Footer content
     doc.setFontSize(7);
-    doc.setTextColor(BRAND_COLORS.lightGray.r, BRAND_COLORS.lightGray.g, BRAND_COLORS.lightGray.b);
-    doc.setFont('helvetica', 'normal');
-    
-    if (company?.site_web || company?.email) {
-      let footerLeft = '';
-      if (company.site_web) footerLeft += `🌐 ${company.site_web}`;
-      if (company.email) footerLeft += (footerLeft ? '   ✉ ' : '✉ ') + company.email;
-      doc.text(footerLeft, 20, footerY);
-    }
-    
+    doc.setTextColor(200, 200, 200);
+    doc.text("MERCI DE RÉGLER CETTE FACTURE AVANT LA DATE D'ÉCHÉANCE", pageWidth / 2, footerY + 5, { align: 'center' });
+
     // Page number
     const pageCount = doc.getNumberOfPages();
-    doc.text(`Page 1 sur ${pageCount}`, pageWidth - 20, footerY, { align: 'right' });
-    
-    // Bottom message
-    doc.setFontSize(6);
-    doc.setTextColor(210, 210, 210);
-    doc.text('MERCI DE RÉGLER CETTE FACTURE AVANT LA DATE D\'ÉCHÉANCE', pageWidth / 2, footerY + 4, { align: 'center' });
-    
-    // Generate PDF as base64
+    doc.setFontSize(8);
+    doc.setTextColor(COLORS.textGray[0], COLORS.textGray[1], COLORS.textGray[2]);
+    doc.text(`Page 1 sur ${pageCount}`, rightMargin, footerY, { align: 'right' });
+
+    // 3. Return PDF as base64 data URI
     const pdfBase64 = doc.output('datauristring');
     
-    console.log('New branded invoice PDF generated successfully');
+    console.log('Premium branded invoice PDF generated successfully');
 
     return new Response(
       JSON.stringify({ 
@@ -426,6 +359,7 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
+
   } catch (error: any) {
     console.error('Error in generate-invoice-pdf function:', error);
     return new Response(
