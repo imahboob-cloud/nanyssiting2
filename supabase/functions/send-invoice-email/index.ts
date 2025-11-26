@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "https://esm.sh/resend@4.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
 
 const corsHeaders = {
@@ -166,9 +166,6 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email using Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-    
     // Generate PDF with beautiful branding
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -489,25 +486,40 @@ const handler = async (req: Request): Promise<Response> => {
     // Get PDF as base64
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     
-    const { error: emailError } = await resend.emails.send({
-      from: company?.email || "onboarding@resend.dev",
-      to: [email],
+    // Configure SMTP client for Gmail
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: Deno.env.get("GMAIL_USER") ?? "",
+          password: Deno.env.get("GMAIL_APP_PASSWORD") ?? "",
+        },
+      },
+    });
+
+    // Convert base64 to Uint8Array for attachment
+    const pdfBytes = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+
+    await client.send({
+      from: company?.email || Deno.env.get("GMAIL_USER") || "contact@nannysitting.be",
+      to: email,
       subject: `Facture ${invoice.numero}${company ? ` - ${company.denomination_sociale}` : ''}`,
       html: htmlContent,
       attachments: [
         {
           filename: `Facture-${invoice.numero}.pdf`,
-          content: pdfBase64,
+          content: pdfBytes,
+          contentType: "application/pdf",
+          encoding: "binary",
         }
       ]
     });
 
-    if (emailError) {
-      console.error('Error sending email:', emailError);
-      throw emailError;
-    }
+    await client.close();
 
-    console.log('Invoice email sent successfully');
+    console.log('Invoice email sent successfully via Gmail SMTP');
 
     return new Response(
       JSON.stringify({ success: true }),

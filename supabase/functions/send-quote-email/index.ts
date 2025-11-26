@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "https://esm.sh/resend@4.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseServiceClient = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -206,22 +205,42 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending email to:", email);
 
-    const emailResponse = await resend.emails.send({
-      from: company?.email ? `${company.denomination_sociale} <onboarding@resend.dev>` : "NannySitting <onboarding@resend.dev>",
-      to: [email],
+    // Configure SMTP client for Gmail
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: Deno.env.get("GMAIL_USER") ?? "",
+          password: Deno.env.get("GMAIL_APP_PASSWORD") ?? "",
+        },
+      },
+    });
+
+    // Convert base64 to Uint8Array for attachment
+    const pdfBytes = Uint8Array.from(atob(base64Pdf), c => c.charCodeAt(0));
+
+    await client.send({
+      from: company?.email || Deno.env.get("GMAIL_USER") || "contact@nannysitting.be",
+      to: email,
       subject: `Votre devis NannySitting - N° ${quote.numero}`,
       html: emailHtml,
       attachments: [
         {
           filename: `Devis-${quote.numero}.pdf`,
-          content: base64Pdf,
+          content: pdfBytes,
+          contentType: "application/pdf",
+          encoding: "binary",
         },
       ],
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    await client.close();
 
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+    console.log("Email sent successfully via Gmail SMTP");
+
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
