@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { QuoteDialog } from "@/components/admin/QuoteDialog";
+import { SendQuoteDialog } from "@/components/admin/SendQuoteDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -30,6 +31,7 @@ type QuoteWithClient = Quote & {
   clients: {
     nom: string;
     prenom: string;
+    email: string | null;
   } | null;
 };
 
@@ -40,6 +42,8 @@ const Quotes = () => {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [quoteToDelete, setQuoteToDelete] = useState<string | null>(null);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [quoteToSend, setQuoteToSend] = useState<QuoteWithClient | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -48,7 +52,7 @@ const Quotes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quotes")
-        .select("*, clients(nom, prenom)")
+        .select("*, clients(nom, prenom, email)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -99,6 +103,11 @@ const Quotes = () => {
       setDeleteDialogOpen(false);
       setQuoteToDelete(null);
     }
+  };
+
+  const handleSend = (quote: QuoteWithClient) => {
+    setQuoteToSend(quote);
+    setSendDialogOpen(true);
   };
 
   const getStatusBadge = (statut: string) => {
@@ -213,6 +222,14 @@ const Quotes = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleSend(quote)}
+                        title="Envoyer le devis"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEdit(quote)}
                       >
                         <Pencil className="h-4 w-4" />
@@ -240,6 +257,15 @@ const Quotes = () => {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["quotes"] });
           setDialogOpen(false);
+        }}
+      />
+
+      <SendQuoteDialog
+        open={sendDialogOpen}
+        onOpenChange={setSendDialogOpen}
+        quote={quoteToSend}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["quotes"] });
         }}
       />
 
