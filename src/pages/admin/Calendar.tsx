@@ -92,6 +92,31 @@ const Calendar = () => {
     setDialogOpen(true);
   };
 
+  const handleDeleteMission = async (missionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('missions')
+      .delete()
+      .eq('id', missionId);
+
+    if (error) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Mission supprimée avec succès',
+      });
+      loadMissions();
+    }
+  };
+
   const previousPeriod = () => {
     if (view === 'month') {
       setCurrentDate(subMonths(currentDate, 1));
@@ -183,6 +208,7 @@ const Calendar = () => {
             missions={missions}
             onDayClick={handleDayClick}
             onMissionClick={handleMissionClick}
+            onDeleteMission={handleDeleteMission}
             statusColors={statusColors}
           />
         )}
@@ -193,6 +219,7 @@ const Calendar = () => {
             missions={missions}
             onDayClick={handleDayClick}
             onMissionClick={handleMissionClick}
+            onDeleteMission={handleDeleteMission}
             statusColors={statusColors}
           />
         )}
@@ -203,6 +230,7 @@ const Calendar = () => {
             missions={missions}
             onDayClick={handleDayClick}
             onMissionClick={handleMissionClick}
+            onDeleteMission={handleDeleteMission}
             statusColors={statusColors}
           />
         )}

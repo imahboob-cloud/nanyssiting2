@@ -106,7 +106,6 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
       const missionData = {
         client_id: data.client_id,
         nannysitter_id: data.nannysitter_id || null,
-        date: format(date, 'yyyy-MM-dd'),
         heure_debut: heureDebut,
         heure_fin: heureFin,
         description: data.description || null,
@@ -123,29 +122,19 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
         if (error) throw error;
         toast({ title: 'Mission mise à jour avec succès' });
       } else {
-        // Créer la mission principale
+        // Créer toutes les missions (principale + dupliquées)
+        const allDates = [date, ...duplicateDates];
+        const missions = allDates.map(missionDate => ({
+          ...missionData,
+          date: format(missionDate, 'yyyy-MM-dd'),
+        }));
+
         const { error } = await supabase
           .from('missions')
-          .insert([missionData]);
+          .insert(missions);
 
         if (error) throw error;
-
-        // Créer les missions dupliquées si nécessaire
-        if (duplicateDates.length > 0) {
-          const duplicateMissions = duplicateDates.map(dupDate => ({
-            ...missionData,
-            date: format(dupDate, 'yyyy-MM-dd'),
-          }));
-
-          const { error: dupError } = await supabase
-            .from('missions')
-            .insert(duplicateMissions);
-
-          if (dupError) throw dupError;
-          toast({ title: `${duplicateDates.length + 1} missions créées avec succès` });
-        } else {
-          toast({ title: 'Mission créée avec succès' });
-        }
+        toast({ title: `${missions.length} mission(s) créée(s) avec succès` });
       }
 
       reset();

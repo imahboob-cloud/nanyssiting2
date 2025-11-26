@@ -1,15 +1,17 @@
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, isSameMonth, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Trash2 } from 'lucide-react';
 
 interface MonthViewProps {
   currentDate: Date;
   missions: any[];
   onDayClick: (date: Date) => void;
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
+  onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   statusColors: Record<string, string>;
 }
 
-export function MonthView({ currentDate, missions, onDayClick, onMissionClick, statusColors }: MonthViewProps) {
+export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors }: MonthViewProps) {
   const days = eachDayOfInterval({
     start: startOfMonth(currentDate),
     end: endOfMonth(currentDate),
@@ -52,9 +54,18 @@ export function MonthView({ currentDate, missions, onDayClick, onMissionClick, s
                   <div
                     key={mission.id}
                     onClick={(e) => onMissionClick(mission, e)}
-                    className={`text-xs p-1 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white truncate hover:opacity-80`}
+                    className={`text-xs p-1 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white truncate hover:opacity-80 flex items-center justify-between group`}
                   >
-                    {mission.clients?.nom} {mission.heure_debut?.slice(0, 5)}
+                    <span className="truncate flex-1">
+                      {mission.clients?.nom} {mission.heure_debut?.slice(0, 5)}
+                    </span>
+                    <button
+                      onClick={(e) => onDeleteMission(mission.id, e)}
+                      className="opacity-0 group-hover:opacity-100 ml-1 hover:text-red-200 transition-opacity flex-shrink-0"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
                 ))}
               </div>
