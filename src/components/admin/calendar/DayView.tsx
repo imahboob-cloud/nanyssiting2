@@ -78,7 +78,7 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
           {/* Missions overlay */}
           {dayMissions.map((mission) => {
             const { top, height } = getMissionPosition(mission);
-            const colorClass = getStatusColor(mission.statut, mission.colorIndex || 0);
+            const backgroundColor = getStatusColor(mission.statut, mission.colorIndex || 0);
             
             return (
               <div
@@ -87,13 +87,14 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
                   e.stopPropagation();
                   onMissionClick(mission, e);
                 }}
-                className={`absolute ${colorClass} text-white rounded-lg p-3 overflow-hidden hover:opacity-90 cursor-pointer shadow-lg z-10 flex items-start justify-between group border-2 border-white`}
                 style={{ 
+                  backgroundColor,
                   top: `${top}px`, 
                   height: `${height}px`,
                   left: `${8 + (mission.colorIndex || 0) * 6}px`,
                   right: '8px'
                 }}
+                className="absolute text-white rounded-lg p-3 overflow-hidden hover:opacity-90 cursor-pointer shadow-lg z-10 flex items-start justify-between group border-2 border-white"
               >
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-base">

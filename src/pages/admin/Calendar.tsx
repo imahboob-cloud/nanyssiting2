@@ -13,15 +13,60 @@ import { useToast } from '@/hooks/use-toast';
 
 type CalendarView = 'month' | 'week' | 'day';
 
-const statusColorMap: Record<string, string[]> = {
-  planifie: Array.from({ length: 10 }, (_, i) => `bg-status-planned-${i}`),
-  en_cours: Array.from({ length: 10 }, (_, i) => `bg-status-in-progress-${i}`),
-  termine: Array.from({ length: 10 }, (_, i) => `bg-status-completed-${i}`),
-  annule: Array.from({ length: 10 }, (_, i) => `bg-status-cancelled-${i}`),
+const statusColorValues: Record<string, string[]> = {
+  planifie: [
+    '18 87% 73%',
+    '18 87% 65%',
+    '18 87% 58%',
+    '18 80% 70%',
+    '25 85% 70%',
+    '15 85% 68%',
+    '20 82% 66%',
+    '18 75% 60%',
+    '22 80% 64%',
+    '16 82% 62%',
+  ],
+  en_cours: [
+    '45 93% 70%',
+    '45 93% 62%',
+    '45 93% 55%',
+    '48 90% 68%',
+    '42 90% 68%',
+    '45 85% 60%',
+    '47 88% 65%',
+    '43 88% 58%',
+    '46 80% 63%',
+    '44 85% 57%',
+  ],
+  termine: [
+    '164 50% 55%',
+    '164 50% 47%',
+    '164 50% 40%',
+    '160 48% 53%',
+    '168 48% 53%',
+    '164 45% 45%',
+    '162 52% 50%',
+    '166 46% 42%',
+    '164 48% 48%',
+    '164 44% 38%',
+  ],
+  annule: [
+    '0 0% 65%',
+    '0 0% 55%',
+    '0 0% 48%',
+    '0 0% 62%',
+    '0 0% 58%',
+    '0 0% 52%',
+    '0 0% 60%',
+    '0 0% 50%',
+    '0 0% 56%',
+    '0 0% 45%',
+  ],
 };
 
 const getStatusColor = (status: string, colorIndex: number) => {
-  return statusColorMap[status]?.[colorIndex % 10] || statusColorMap.planifie[0];
+  const colors = statusColorValues[status] || statusColorValues.planifie;
+  return `hsl(${colors[colorIndex % 10]})`;
 };
 
 const statusLabels = {
