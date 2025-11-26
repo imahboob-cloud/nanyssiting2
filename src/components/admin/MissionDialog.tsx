@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CalendarIcon, Copy, Trash2 } from 'lucide-react';
@@ -44,6 +45,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   const [heureDebut, setHeureDebut] = useState('09:00');
   const [heureFin, setHeureFin] = useState('18:00');
   const [duplicateDates, setDuplicateDates] = useState<Date[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<MissionFormData>({
@@ -92,12 +94,12 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
     if (!error && data) setNannysitters(data);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
     if (!mission || !onDelete) return;
-    
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
-      return;
-    }
 
     setLoading(true);
     try {
@@ -110,6 +112,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
       
       toast({ title: 'Mission supprimée avec succès' });
       reset();
+      setDeleteDialogOpen(false);
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -357,7 +360,6 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
                   onClick={handleDelete}
                   disabled={loading}
                 >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <Trash2 className="mr-2 h-4 w-4" />
                   Supprimer
                 </Button>
@@ -375,6 +377,16 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Supprimer la mission"
+        description="Êtes-vous sûr de vouloir supprimer cette mission ? Cette action est irréversible."
+        confirmText="Supprimer"
+        cancelText="Annuler"
+      />
     </Dialog>
   );
 }
