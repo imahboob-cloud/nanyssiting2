@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Send, Eye, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
@@ -27,6 +27,8 @@ interface SendInvoiceDialogProps {
 export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: SendInvoiceDialogProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [pdfPreview, setPdfPreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Update email when invoice changes
@@ -36,7 +38,47 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
     } else {
       setEmail('');
     }
+    // Reset PDF preview when invoice changes
+    setPdfPreview(null);
   }, [invoice]);
+
+  const handleGeneratePreview = async () => {
+    if (!invoice) return;
+
+    setGeneratingPdf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-invoice-pdf', {
+        body: { invoiceId: invoice.id },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        setPdfPreview(data.pdf);
+        // Open preview in new tab
+        const newWindow = window.open();
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head><title>Aperçu Facture ${invoice.numero}</title></head>
+              <body style="margin:0">
+                <iframe src="${data.pdf}" style="width:100%;height:100vh;border:none"></iframe>
+              </body>
+            </html>
+          `);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error generating PDF preview:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer l\'aperçu PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!invoice || !email) {
@@ -104,6 +146,42 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
           <DialogTitle>Envoyer la facture</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGeneratePreview}
+              disabled={generatingPdf}
+              className="flex-1"
+            >
+              {generatingPdf ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Génération...
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Aperçu PDF
+                </>
+              )}
+            </Button>
+            {pdfPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = pdfPreview;
+                  link.download = `Facture-${invoice.numero}.pdf`;
+                  link.click();
+                }}
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           <div className="p-4 border rounded-lg space-y-2 bg-muted">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Numéro:</span>

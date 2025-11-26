@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -168,11 +169,104 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email using Resend
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
+    // Generate PDF
+    const doc = new jsPDF();
+    doc.setFont('helvetica');
+    doc.setFontSize(24);
+    doc.setTextColor(40, 40, 40);
+    doc.text('FACTURE', 105, 20, { align: 'center' });
+    
+    if (company) {
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(company.denomination_sociale, 20, 35);
+      if (company.adresse_siege) doc.text(company.adresse_siege, 20, 40);
+      if (company.numero_tva) doc.text(`TVA: ${company.numero_tva}`, 20, 45);
+    }
+    
+    doc.setFontSize(12);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`Facture N°: ${invoice.numero}`, 20, 60);
+    doc.setFontSize(10);
+    doc.text(`Date: ${new Date(invoice.created_at!).toLocaleDateString('fr-FR')}`, 20, 67);
+    if (invoice.date_echeance) {
+      doc.text(`Échéance: ${new Date(invoice.date_echeance).toLocaleDateString('fr-FR')}`, 20, 74);
+    }
+    
+    doc.setFontSize(11);
+    doc.text('Facturé à:', 140, 60);
+    doc.setFontSize(10);
+    doc.text(clientName, 140, 67);
+    if (invoice.clients?.email) doc.text(invoice.clients.email, 140, 74);
+    
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 85, 190, 85);
+    
+    let yPos = 95;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yPos - 5, 170, 8, 'F');
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Date', 22, yPos);
+    doc.text('Horaires', 50, yPos);
+    doc.text('Description', 85, yPos);
+    doc.text('Prix/h', 140, yPos);
+    doc.text('Total', 170, yPos);
+    
+    yPos += 10;
+    doc.setTextColor(40, 40, 40);
+    lignes.forEach((ligne: InvoiceLine) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(new Date(ligne.date).toLocaleDateString('fr-FR'), 22, yPos);
+      doc.text(`${ligne.heure_debut}-${ligne.heure_fin}`, 50, yPos);
+      doc.text(ligne.description.substring(0, 25), 85, yPos);
+      doc.text(`${ligne.prix_horaire.toFixed(2)} €`, 140, yPos);
+      doc.text(`${ligne.total.toFixed(2)} €`, 170, yPos);
+      yPos += 7;
+    });
+    
+    yPos += 5;
+    doc.line(20, yPos, 190, yPos);
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.text('Montant HT:', 140, yPos);
+    doc.text(`${invoice.montant_ht?.toFixed(2)} €`, 170, yPos);
+    yPos += 7;
+    doc.text(`TVA (${invoice.tva}%):`, 140, yPos);
+    doc.text(`${((invoice.montant_ttc || 0) - (invoice.montant_ht || 0)).toFixed(2)} €`, 170, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Montant TTC:', 140, yPos);
+    doc.text(`${invoice.montant_ttc?.toFixed(2)} €`, 170, yPos);
+    
+    if (invoice.notes) {
+      yPos += 15;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text('Notes:', 20, yPos);
+      const splitNotes = doc.splitTextToSize(invoice.notes, 170);
+      doc.text(splitNotes, 20, yPos + 5);
+    }
+    
+    // Get PDF as base64
+    const pdfBase64 = doc.output('datauristring').split(',')[1];
+    
     const { error: emailError } = await resend.emails.send({
       from: company?.email || "onboarding@resend.dev",
       to: [email],
       subject: `Facture ${invoice.numero}${company ? ` - ${company.denomination_sociale}` : ''}`,
       html: htmlContent,
+      attachments: [
+        {
+          filename: `Facture-${invoice.numero}.pdf`,
+          content: pdfBase64,
+        }
+      ]
     });
 
     if (emailError) {
