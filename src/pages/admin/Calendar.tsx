@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Columns3, CalendarDays } from 'lucide-react';
 import { MissionDialog } from '@/components/admin/MissionDialog';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, subDays } from 'date-fns';
+import { MonthView } from '@/components/admin/calendar/MonthView';
+import { WeekView } from '@/components/admin/calendar/WeekView';
+import { DayView } from '@/components/admin/calendar/DayView';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
@@ -60,8 +62,7 @@ const Calendar = () => {
         clients (nom, prenom),
         nannysitters (nom, prenom)
       `)
-      .gte('date_debut', start.toISOString())
-      .lte('date_debut', end.toISOString())
+      .or(`and(date_debut.gte.${start.toISOString()},date_debut.lte.${end.toISOString()}),and(date_fin.gte.${start.toISOString()},date_fin.lte.${end.toISOString()})`)
       .order('date_debut', { ascending: true });
 
     if (error) {
@@ -75,34 +76,6 @@ const Calendar = () => {
     }
   };
 
-  const getDaysToDisplay = () => {
-    if (view === 'month') {
-      return eachDayOfInterval({
-        start: startOfMonth(currentDate),
-        end: endOfMonth(currentDate),
-      });
-    } else if (view === 'week') {
-      return eachDayOfInterval({
-        start: startOfWeek(currentDate, { locale: fr }),
-        end: endOfWeek(currentDate, { locale: fr }),
-      });
-    } else {
-      return [currentDate];
-    }
-  };
-
-  const getMissionsForDay = (day: Date) => {
-    return missions.filter((mission) => {
-      const missionStart = startOfDay(new Date(mission.date_debut));
-      const missionEnd = startOfDay(new Date(mission.date_fin));
-      const currentDay = startOfDay(day);
-      
-      return isWithinInterval(currentDay, {
-        start: missionStart,
-        end: missionEnd
-      });
-    });
-  };
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -149,7 +122,7 @@ const Calendar = () => {
     }
   };
 
-  const days = getDaysToDisplay();
+  
 
   return (
     <div className="space-y-6">
@@ -202,53 +175,35 @@ const Calendar = () => {
           </Button>
         </div>
 
-        <div className={`grid gap-2 ${view === 'month' ? 'grid-cols-7' : view === 'week' ? 'grid-cols-7' : 'grid-cols-1'}`}>
-          {view !== 'day' && ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
-            <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
-              {day}
-            </div>
-          ))}
+        {view === 'month' && (
+          <MonthView
+            currentDate={currentDate}
+            missions={missions}
+            onDayClick={handleDayClick}
+            onMissionClick={handleMissionClick}
+            statusColors={statusColors}
+          />
+        )}
 
-          {days.map((day, idx) => {
-            const dayMissions = getMissionsForDay(day);
-            const isToday = isSameDay(day, new Date());
-            const isCurrentMonth = view === 'month' ? isSameMonth(day, currentDate) : true;
+        {view === 'week' && (
+          <WeekView
+            currentDate={currentDate}
+            missions={missions}
+            onDayClick={handleDayClick}
+            onMissionClick={handleMissionClick}
+            statusColors={statusColors}
+          />
+        )}
 
-            return (
-              <div
-                key={idx}
-                onClick={() => handleDayClick(day)}
-                className={`${view === 'day' ? 'min-h-[500px]' : 'min-h-[100px]'} p-2 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
-                  !isCurrentMonth ? 'opacity-40' : ''
-                } ${isToday ? 'border-primary' : ''}`}
-              >
-                <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : ''}`}>
-                  {view === 'day' ? format(day, 'EEEE d MMMM yyyy', { locale: fr }) : format(day, 'd')}
-                </div>
-                <div className="space-y-1">
-                  {dayMissions.map((mission) => (
-                    <div
-                      key={mission.id}
-                      onClick={(e) => handleMissionClick(mission, e)}
-                      className={`text-xs p-2 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white hover:opacity-80 ${
-                        view === 'day' ? '' : 'truncate'
-                      }`}
-                    >
-                      <div className="font-medium">{mission.clients?.nom} {mission.clients?.prenom}</div>
-                      <div>{format(new Date(mission.date_debut), 'HH:mm')} - {format(new Date(mission.date_fin), 'HH:mm')}</div>
-                      {mission.nannysitters && (
-                        <div className="text-xs opacity-90">{mission.nannysitters.prenom} {mission.nannysitters.nom}</div>
-                      )}
-                      {view === 'day' && mission.description && (
-                        <div className="mt-1 text-xs opacity-90">{mission.description}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {view === 'day' && (
+          <DayView
+            currentDate={currentDate}
+            missions={missions}
+            onDayClick={handleDayClick}
+            onMissionClick={handleMissionClick}
+            statusColors={statusColors}
+          />
+        )}
       </Card>
 
       <MissionDialog
