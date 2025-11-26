@@ -458,7 +458,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   <div className="col-span-1">
                     <Label className="text-xs">Début</Label>
                     <Select value={ligne.heure_debut} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
-                      <SelectTrigger className="h-9 text-xs">
+                      <SelectTrigger className="h-9 text-xs px-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -478,7 +478,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   <div className="col-span-1">
                     <Label className="text-xs">Fin</Label>
                     <Select value={ligne.heure_fin} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
-                      <SelectTrigger className="h-9 text-xs">
+                      <SelectTrigger className="h-9 text-xs px-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -495,7 +495,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-4">
+                  <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
                     <Input
                       value={ligne.description}
@@ -523,7 +523,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       className="h-9 text-xs bg-muted font-semibold"
                     />
                   </div>
-                  <div className="col-span-1 flex gap-1 justify-end">
+                  <div className="col-span-2 flex gap-1 justify-end">
                     <Button
                       type="button"
                       variant="ghost"
