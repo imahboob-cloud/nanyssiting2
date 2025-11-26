@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,11 +30,13 @@ export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQu
   const { toast } = useToast();
 
   // Update email when quote changes
-  useState(() => {
+  useEffect(() => {
     if (quote?.clients?.email) {
       setEmail(quote.clients.email);
+    } else {
+      setEmail('');
     }
-  });
+  }, [quote]);
 
   const handleSend = async () => {
     if (!quote || !email) {
