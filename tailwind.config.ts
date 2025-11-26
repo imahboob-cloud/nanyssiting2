@@ -60,6 +60,16 @@ export default {
         salmon: "hsl(var(--salmon))",
         sage: "hsl(var(--sage))",
         lavender: "hsl(var(--lavender))",
+        status: {
+          planned: "hsl(var(--status-planned))",
+          "planned-alt": "hsl(var(--status-planned-alt))",
+          "in-progress": "hsl(var(--status-in-progress))",
+          "in-progress-alt": "hsl(var(--status-in-progress-alt))",
+          completed: "hsl(var(--status-completed))",
+          "completed-alt": "hsl(var(--status-completed-alt))",
+          cancelled: "hsl(var(--status-cancelled))",
+          "cancelled-alt": "hsl(var(--status-cancelled-alt))",
+        },
       },
       fontFamily: {
         sans: ['Mulish', 'system-ui', 'sans-serif'],

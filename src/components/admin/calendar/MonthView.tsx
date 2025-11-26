@@ -9,9 +9,10 @@ interface MonthViewProps {
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   statusColors: Record<string, string>;
+  statusColorsAlt: Record<string, string>;
 }
 
-export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors }: MonthViewProps) {
+export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors, statusColorsAlt }: MonthViewProps) {
   const days = eachDayOfInterval({
     start: startOfMonth(currentDate),
     end: endOfMonth(currentDate),
@@ -50,24 +51,27 @@ export function MonthView({ currentDate, missions, onDayClick, onMissionClick, o
                 {format(day, 'd')}
               </div>
               <div className="space-y-1">
-                {dayMissions.map((mission) => (
-                  <div
-                    key={mission.id}
-                    onClick={(e) => onMissionClick(mission, e)}
-                    className={`text-xs p-1 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white truncate hover:opacity-80 flex items-center justify-between group`}
-                  >
-                    <span className="truncate flex-1">
-                      {mission.clients?.nom} {mission.heure_debut?.slice(0, 5)}
-                    </span>
-                    <button
-                      onClick={(e) => onDeleteMission(mission.id, e)}
-                      className="opacity-0 group-hover:opacity-100 ml-1 hover:text-red-200 transition-opacity flex-shrink-0"
-                      title="Supprimer"
+                {dayMissions.map((mission) => {
+                  const colors = mission.useAltColor ? statusColorsAlt : statusColors;
+                  return (
+                    <div
+                      key={mission.id}
+                      onClick={(e) => onMissionClick(mission, e)}
+                      className={`text-xs p-1 rounded ${colors[mission.statut as keyof typeof colors]} text-white truncate hover:opacity-80 flex items-center justify-between group`}
                     >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
+                      <span className="truncate flex-1">
+                        {mission.clients?.nom} {mission.heure_debut?.slice(0, 5)}
+                      </span>
+                      <button
+                        onClick={(e) => onDeleteMission(mission.id, e)}
+                        className="opacity-0 group-hover:opacity-100 ml-1 hover:text-red-200 transition-opacity flex-shrink-0"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

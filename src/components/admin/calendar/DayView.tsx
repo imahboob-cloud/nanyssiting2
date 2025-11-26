@@ -9,9 +9,10 @@ interface DayViewProps {
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   statusColors: Record<string, string>;
+  statusColorsAlt: Record<string, string>;
 }
 
-export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors }: DayViewProps) {
+export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, statusColors, statusColorsAlt }: DayViewProps) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const getMissionsForDay = () => {
@@ -78,6 +79,7 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
           {/* Missions overlay */}
           {dayMissions.map((mission) => {
             const { top, height } = getMissionPosition(mission);
+            const colors = mission.useAltColor ? statusColorsAlt : statusColors;
             
             return (
               <div
@@ -86,7 +88,7 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
                   e.stopPropagation();
                   onMissionClick(mission, e);
                 }}
-                className={`absolute inset-x-2 ${statusColors[mission.statut as keyof typeof statusColors]} text-white rounded-lg p-3 overflow-hidden hover:opacity-80 cursor-pointer shadow-md z-10 flex items-start justify-between group`}
+                className={`absolute inset-x-2 ${colors[mission.statut as keyof typeof colors]} text-white rounded-lg p-3 overflow-hidden hover:opacity-80 cursor-pointer shadow-md z-10 flex items-start justify-between group`}
                 style={{ top: `${top}px`, height: `${height}px` }}
               >
                 <div className="flex-1 min-w-0">
