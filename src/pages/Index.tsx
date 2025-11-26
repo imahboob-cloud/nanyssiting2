@@ -401,8 +401,8 @@ const Index = () => {
                 <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-sage opacity-10 rounded-tr-[100px]"></div>
               </div>
               
-              <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-                <div>
+              <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                <div className="order-2 md:order-1">
                   <h1 className="text-4xl md:text-6xl font-extrabold text-foreground leading-tight mb-6 font-heading">
                     Plus qu'une garde, <br/>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-salmon to-lavender">
@@ -422,21 +422,21 @@ const Index = () => {
                   </div>
                 </div>
                 
-                <div className="relative hidden md:block">
-                  <div className="relative z-10 bg-card p-4 rounded-3xl shadow-2xl rotate-3 transform hover:rotate-0 transition-transform duration-500">
+                <div className="relative order-1 md:order-2">
+                  <div className="relative z-10 bg-card p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl md:rotate-3 transform md:hover:rotate-0 transition-transform duration-500">
                     <img 
                       src={heroBabysitter}
                       alt="Babysitter jouant avec enfant" 
-                      className="rounded-2xl w-full h-auto object-cover aspect-[4/3]"
+                      className="rounded-xl md:rounded-2xl w-full h-auto object-cover aspect-[4/3]"
                     />
-                    <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-lg flex items-center gap-3">
-                      <div className="bg-green-100 p-2 rounded-full text-green-600">
-                        <ShieldCheck size={24} />
+                    <div className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 bg-card p-3 md:p-4 rounded-xl shadow-lg flex items-center gap-2 md:gap-3">
+                      <div className="bg-green-100 p-1.5 md:p-2 rounded-full text-green-600">
+                        <ShieldCheck size={20} className="md:w-6 md:h-6" />
                       </div>
-                      <p className="font-bold text-foreground text-lg">Profils vérifiés</p>
+                      <p className="font-bold text-foreground text-sm md:text-lg">Profils vérifiés</p>
                     </div>
                   </div>
-                  <div className="absolute top-10 right-10 w-full h-full bg-salmon rounded-3xl -z-10 opacity-20 transform translate-x-4 translate-y-4"></div>
+                  <div className="absolute top-6 md:top-10 right-6 md:right-10 w-full h-full bg-salmon rounded-2xl md:rounded-3xl -z-10 opacity-20 transform translate-x-3 translate-y-3 md:translate-x-4 md:translate-y-4"></div>
                 </div>
               </div>
             </header>
