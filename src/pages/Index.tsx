@@ -424,10 +424,40 @@ const Index = () => {
             <span className="text-foreground">NannySitting</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             <button onClick={navigateHome} className="hover:text-salmon font-medium transition-colors">Accueil</button>
             <button onClick={() => scrollToSection('services')} className="hover:text-salmon font-medium transition-colors">Services</button>
-            <NannyButton onClick={() => scrollToSection('contact-form-section')} className="px-5 py-2 text-sm">
+            
+            {/* Social Icons & Phone */}
+            <div className="flex items-center gap-3 ml-2">
+              <a 
+                href="https://instagram.com/nannysitting" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-salmon text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
+                aria-label="Instagram"
+              >
+                <Instagram size={18} />
+              </a>
+              <a 
+                href="https://facebook.com/nannysitting" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-salmon text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
+                aria-label="Facebook"
+              >
+                <Facebook size={18} />
+              </a>
+              <a 
+                href="tel:+32470123456"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-sage text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
+                aria-label="Appeler"
+              >
+                <Phone size={18} />
+              </a>
+            </div>
+            
+            <NannyButton onClick={() => scrollToSection('contact-form-section')} className="px-5 py-2 text-sm ml-2">
               Réserver maintenant
             </NannyButton>
           </div>
@@ -642,10 +672,10 @@ const Index = () => {
           <div>
             <h4 className="font-bold mb-4 text-salmon font-heading">Contact</h4>
             <ul className="space-y-2 text-gray-400 text-sm flex flex-col items-center md:items-start">
-              <li className="flex items-center gap-2">
-                <Mail size={16}/>
-                <a href="mailto:contact@nannysitting.be" className="hover:text-white transition-colors">
-                  contact@nannysitting.be
+              <li>
+                <a href="mailto:contact@nannysitting.be" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Mail size={16} className="group-hover:text-salmon transition-colors"/>
+                  <span>contact@nannysitting.be</span>
                 </a>
               </li>
               <li>
