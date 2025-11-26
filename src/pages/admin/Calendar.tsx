@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { MissionDialog } from '@/components/admin/MissionDialog';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,9 +67,16 @@ const Calendar = () => {
   });
 
   const getMissionsForDay = (day: Date) => {
-    return missions.filter((mission) => 
-      isSameDay(new Date(mission.date_debut), day)
-    );
+    return missions.filter((mission) => {
+      const missionStart = startOfDay(new Date(mission.date_debut));
+      const missionEnd = startOfDay(new Date(mission.date_fin));
+      const currentDay = startOfDay(day);
+      
+      return isWithinInterval(currentDay, {
+        start: missionStart,
+        end: missionEnd
+      });
+    });
   };
 
   const handleDayClick = (day: Date) => {
