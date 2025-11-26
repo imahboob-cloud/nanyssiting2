@@ -425,7 +425,7 @@ const Index = () => {
             {/* Social Icons & Phone */}
             <div className="flex items-center gap-3 ml-2">
               <a 
-                href="https://instagram.com/nannysitting" 
+                href="https://www.instagram.com/nannysitting" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full bg-muted hover:bg-salmon text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
@@ -443,7 +443,7 @@ const Index = () => {
                 <Facebook size={18} />
               </a>
               <a 
-                href="tel:+32470123456"
+                href="tel:+32493423478"
                 className="w-9 h-9 rounded-full bg-muted hover:bg-sage text-foreground hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                 aria-label="Appeler"
               >
@@ -673,7 +673,7 @@ const Index = () => {
                 </a>
               </li>
               <li>
-                <PhoneReveal number="+32 470 12 34 56" size={16} />
+                <PhoneReveal number="+32 493 42 34 78" size={16} />
               </li>
               <li className="flex items-center gap-2"><MapPin size={16}/> Bruxelles & Environs</li>
             </ul>
@@ -686,15 +686,15 @@ const Index = () => {
             {/* Social Media */}
             <div className="flex items-center gap-4">
               <span className="text-gray-400 text-sm">Suivez-nous :</span>
-              <a 
-                href="https://instagram.com/nannysitting" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-salmon transition-all duration-300 hover:scale-110"
-                aria-label="Instagram"
-              >
-                <Instagram size={20} />
-              </a>
+               <a 
+                 href="https://www.instagram.com/nannysitting" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-salmon transition-all duration-300 hover:scale-110"
+                 aria-label="Instagram"
+               >
+                 <Instagram size={20} />
+               </a>
               <a 
                 href="https://facebook.com/nannysitting" 
                 target="_blank" 
