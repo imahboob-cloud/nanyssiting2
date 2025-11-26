@@ -106,16 +106,45 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      const formSection = document.getElementById(id);
-      if (formSection) {
-        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.phone,
+          service: formData.service,
+          message: formData.message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi du formulaire');
       }
-    }, 100);
+
+      setSubmitted(true);
+      setTimeout(() => {
+        const formSection = document.getElementById(id);
+        if (formSection) {
+          formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -232,8 +261,13 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
                 ></textarea>
               </div>
 
-              <NannyButton variant="accent" type="submit" className="w-full mt-2 shadow-xl hover:shadow-2xl py-4 text-lg">
-                Recevoir mon devis gratuit
+              <NannyButton 
+                variant="accent" 
+                type="submit" 
+                className="w-full mt-2 shadow-xl hover:shadow-2xl py-4 text-lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Envoi en cours...' : 'Recevoir mon devis gratuit'}
               </NannyButton>
               <p className="text-center text-xs text-muted-foreground mt-2">Données confidentielles. Réponse sous 24h.</p>
             </form>
@@ -610,7 +644,12 @@ const Index = () => {
           <div>
             <h4 className="font-bold mb-4 text-salmon font-heading">Contact</h4>
             <ul className="space-y-2 text-gray-400 text-sm flex flex-col items-center md:items-start">
-              <li className="flex items-center gap-2"><Mail size={16}/> contact@nannysitting.be</li>
+              <li className="flex items-center gap-2">
+                <Mail size={16}/>
+                <a href="mailto:contact@nannysitting.be" className="hover:text-white transition-colors">
+                  contact@nannysitting.be
+                </a>
+              </li>
               <li className="flex items-center gap-2"><Phone size={16}/> +32 4XX XX XX XX</li>
               <li className="flex items-center gap-2"><MapPin size={16}/> Bruxelles & Environs</li>
             </ul>
