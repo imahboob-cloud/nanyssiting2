@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Columns3, CalendarDays } from 'lucide-react';
 import { MissionDialog } from '@/components/admin/MissionDialog';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { MonthView } from '@/components/admin/calendar/MonthView';
 import { WeekView } from '@/components/admin/calendar/WeekView';
 import { DayView } from '@/components/admin/calendar/DayView';
@@ -83,6 +84,8 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [missionToDelete, setMissionToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -173,14 +176,17 @@ const Calendar = () => {
 
   const handleDeleteMission = async (missionId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
-      return;
-    }
+    setMissionToDelete(missionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!missionToDelete) return;
 
     const { error } = await supabase
       .from('missions')
       .delete()
-      .eq('id', missionId);
+      .eq('id', missionToDelete);
 
     if (error) {
       toast({
@@ -194,6 +200,9 @@ const Calendar = () => {
       });
       loadMissions();
     }
+    
+    setDeleteDialogOpen(false);
+    setMissionToDelete(null);
   };
 
   const previousPeriod = () => {
@@ -322,6 +331,16 @@ const Calendar = () => {
         selectedDate={selectedDate || undefined}
         onSuccess={loadMissions}
         onDelete={handleDeleteMission}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Supprimer la mission"
+        description="Êtes-vous sûr de vouloir supprimer cette mission ? Cette action est irréversible."
+        confirmText="Supprimer"
+        cancelText="Annuler"
       />
     </div>
   );
