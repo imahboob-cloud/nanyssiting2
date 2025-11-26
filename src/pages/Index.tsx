@@ -16,13 +16,14 @@ import {
   Mail, 
   CheckCircle,
   Users,
-  ChevronDown,
   Quote
 } from 'lucide-react';
 import { NannyButton } from '@/components/NannyButton';
 import { SectionTitle } from '@/components/SectionTitle';
+import { ServiceSelect } from '@/components/ServiceSelect';
 import { services, Service } from '@/data/services';
 import { cn } from '@/lib/utils';
+import heroBabysitter from '@/assets/hero-babysitter.jpg';
 
 // Icon mapping
 const iconMap: Record<string, any> = {
@@ -208,20 +209,10 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
                 </div>
               </div>
               
-              <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">Votre besoin principal</label>
-                <div className="relative">
-                  <select 
-                    className="w-full bg-card border border-border text-foreground font-medium rounded-2xl px-5 py-3 appearance-none focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon cursor-pointer"
-                    value={formData.service}
-                    onChange={(e) => setFormData({...formData, service: e.target.value})}
-                  >
-                    {services.map(s => <option key={s.id} value={s.title}>{s.title}</option>)}
-                    <option value="Autre">Autre demande</option>
-                  </select>
-                  <ChevronDown className="absolute right-5 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none" size={20} />
-                </div>
-              </div>
+              <ServiceSelect 
+                value={formData.service}
+                onChange={(value) => setFormData({...formData, service: value})}
+              />
 
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">Détails (Âge des enfants, horaires, etc.)</label>
@@ -422,11 +413,11 @@ const Index = () => {
                     De la sortie d'école à l'accompagnement post-accouchement, NannySitting offre bienveillance, sécurité et éveil à vos enfants. Partez l'esprit tranquille.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <NannyButton onClick={() => scrollToSection('contact-form-section')}>
-                      Trouver ma nounou idéale
+                    <NannyButton onClick={() => scrollToSection('contact-form-section')} className="whitespace-nowrap">
+                      Trouver ma nounou
                     </NannyButton>
-                    <NannyButton variant="secondary" onClick={() => scrollToSection('services')}>
-                      Découvrir nos services
+                    <NannyButton variant="secondary" onClick={() => scrollToSection('services')} className="whitespace-nowrap">
+                      Nos services
                     </NannyButton>
                   </div>
                 </div>
@@ -434,7 +425,7 @@ const Index = () => {
                 <div className="relative hidden md:block">
                   <div className="relative z-10 bg-card p-4 rounded-3xl shadow-2xl rotate-3 transform hover:rotate-0 transition-transform duration-500">
                     <img 
-                      src="https://images.unsplash.com/photo-1596906282063-7da9f77f3e69?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                      src={heroBabysitter}
                       alt="Babysitter jouant avec enfant" 
                       className="rounded-2xl w-full h-auto object-cover aspect-[4/3]"
                     />
