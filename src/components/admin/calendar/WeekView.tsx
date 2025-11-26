@@ -24,23 +24,43 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
       return isWithinInterval(currentDay, {
         start: startOfDay(missionStart),
         end: startOfDay(missionEnd)
-      }) && isSameDay(missionStart, day);
+      });
     });
   };
 
-  const getMissionPosition = (mission: any) => {
+  const getMissionPosition = (mission: any, day: Date) => {
     const start = new Date(mission.date_debut);
     const end = new Date(mission.date_fin);
     
-    const startHour = start.getHours();
-    const startMinutes = start.getMinutes();
-    const topPosition = (startHour * 64) + (startMinutes / 60 * 64);
-    
-    const diffMs = end.getTime() - start.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-    const height = Math.max(1, diffHours) * 64;
-    
-    return { top: topPosition, height };
+    // Si c'est le premier jour de la mission, commencer à l'heure réelle
+    if (isSameDay(start, day)) {
+      const startHour = start.getHours();
+      const startMinutes = start.getMinutes();
+      const topPosition = (startHour * 64) + (startMinutes / 60 * 64);
+      
+      // Si la mission se termine le même jour
+      if (isSameDay(start, end)) {
+        const diffMs = end.getTime() - start.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const height = Math.max(1, diffHours) * 64;
+        return { top: topPosition, height };
+      } else {
+        // Sinon, aller jusqu'à minuit
+        const height = (24 - startHour - (startMinutes / 60)) * 64;
+        return { top: topPosition, height };
+      }
+    }
+    // Si c'est le dernier jour de la mission
+    else if (isSameDay(end, day)) {
+      const endHour = end.getHours();
+      const endMinutes = end.getMinutes();
+      const height = (endHour + (endMinutes / 60)) * 64;
+      return { top: 0, height };
+    }
+    // Si c'est un jour entre le début et la fin
+    else {
+      return { top: 0, height: 24 * 64 }; // Toute la journée
+    }
   };
 
   return (
@@ -89,7 +109,7 @@ export function WeekView({ currentDate, missions, onDayClick, onMissionClick, st
 
                 {/* Missions overlay */}
                 {dayMissions.map((mission) => {
-                  const { top, height } = getMissionPosition(mission);
+                  const { top, height } = getMissionPosition(mission, day);
                   
                   return (
                     <div
