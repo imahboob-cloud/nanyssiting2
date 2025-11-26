@@ -77,6 +77,24 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     loadTarifs();
   }, []);
 
+  // Initialize first line with appropriate tarif when tarifs are loaded
+  useEffect(() => {
+    if (tarifs.length > 0 && lignes.length === 1 && !lignes[0].description && !invoice && !quoteData) {
+      const todayDate = format(new Date(), 'yyyy-MM-dd');
+      const appropriateTarif = getAppropriateTarif(todayDate);
+      if (appropriateTarif) {
+        setLignes([{
+          date: todayDate,
+          heure_debut: '09:00',
+          heure_fin: '17:00',
+          description: appropriateTarif.nom,
+          prix_horaire: parseFloat(appropriateTarif.tarif_horaire),
+          total: 0
+        }]);
+      }
+    }
+  }, [tarifs]);
+
   useEffect(() => {
     if (quoteData) {
       // Pre-fill from quote
@@ -134,12 +152,15 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
 
   const addLigne = () => {
     const lastLigne = lignes[lignes.length - 1];
+    const newDate = lastLigne.date;
+    const appropriateTarif = getAppropriateTarif(newDate);
+    
     setLignes([...lignes, { 
-      date: lastLigne.date, 
+      date: newDate, 
       heure_debut: lastLigne.heure_debut, 
       heure_fin: lastLigne.heure_fin, 
-      description: '', 
-      prix_horaire: lastLigne.prix_horaire, 
+      description: appropriateTarif?.nom || '', 
+      prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
       total: 0 
     }]);
   };
@@ -246,7 +267,16 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
       }
 
       reset();
-      setLignes([{ date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }]);
+      const todayDate = format(new Date(), 'yyyy-MM-dd');
+      const appropriateTarif = getAppropriateTarif(todayDate);
+      setLignes([{ 
+        date: todayDate, 
+        heure_debut: '09:00', 
+        heure_fin: '17:00', 
+        description: appropriateTarif?.nom || '', 
+        prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
+        total: 0 
+      }]);
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 30);
       setDateEcheance(defaultDate);
@@ -402,10 +432,9 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                   <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
                     <Input
-                      placeholder="Description"
                       value={ligne.description}
-                      onChange={(e) => updateLigne(index, 'description', e.target.value)}
-                      className="h-9 text-xs"
+                      disabled
+                      className="h-9 text-xs bg-muted"
                     />
                   </div>
                   <div className="col-span-1">
