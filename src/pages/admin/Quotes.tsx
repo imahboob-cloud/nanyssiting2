@@ -339,7 +339,8 @@ const Quotes = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(quote)}
-                        title="Modifier"
+                        disabled={quote.statut === 'accepte'}
+                        title={quote.statut === 'accepte' ? 'Impossible de modifier un devis accepté' : 'Modifier'}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -347,7 +348,8 @@ const Quotes = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(quote.id)}
-                        title="Supprimer"
+                        disabled={quote.statut === 'accepte'}
+                        title={quote.statut === 'accepte' ? 'Impossible de supprimer un devis accepté' : 'Supprimer'}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
