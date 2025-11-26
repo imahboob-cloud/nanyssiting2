@@ -12,8 +12,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CalendarIcon, Plus, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader2, CalendarIcon, Plus, Trash2, Copy } from 'lucide-react';
+import { format, parse, differenceInHours, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -28,9 +28,11 @@ const quoteSchema = z.object({
 type QuoteFormData = z.infer<typeof quoteSchema>;
 
 interface QuoteLine {
+  date: string;
+  heure_debut: string;
+  heure_fin: string;
   description: string;
-  quantite: number;
-  prix_unitaire: number;
+  prix_horaire: number;
   total: number;
 }
 
@@ -46,7 +48,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
   const [clients, setClients] = useState<any[]>([]);
   const [dateValidite, setDateValidite] = useState<Date | undefined>();
   const [lignes, setLignes] = useState<QuoteLine[]>([
-    { description: '', quantite: 1, prix_unitaire: 0, total: 0 }
+    { date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }
   ]);
   const { toast } = useToast();
 
@@ -86,8 +88,32 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     if (!error && data) setClients(data);
   };
 
+  const calculateHours = (heureDebut: string, heureFin: string): number => {
+    try {
+      const debut = parse(heureDebut, 'HH:mm', new Date());
+      const fin = parse(heureFin, 'HH:mm', new Date());
+      const totalMinutes = differenceInMinutes(fin, debut);
+      return totalMinutes / 60;
+    } catch {
+      return 0;
+    }
+  };
+
   const addLigne = () => {
-    setLignes([...lignes, { description: '', quantite: 1, prix_unitaire: 0, total: 0 }]);
+    const lastLigne = lignes[lignes.length - 1];
+    setLignes([...lignes, { 
+      date: lastLigne.date, 
+      heure_debut: lastLigne.heure_debut, 
+      heure_fin: lastLigne.heure_fin, 
+      description: '', 
+      prix_horaire: lastLigne.prix_horaire, 
+      total: 0 
+    }]);
+  };
+
+  const duplicateLigne = (index: number) => {
+    const ligne = lignes[index];
+    setLignes([...lignes.slice(0, index + 1), { ...ligne }, ...lignes.slice(index + 1)]);
   };
 
   const removeLigne = (index: number) => {
@@ -100,8 +126,9 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
     const newLignes = [...lignes];
     newLignes[index] = { ...newLignes[index], [field]: value };
     
-    if (field === 'quantite' || field === 'prix_unitaire') {
-      newLignes[index].total = newLignes[index].quantite * newLignes[index].prix_unitaire;
+    if (field === 'heure_debut' || field === 'heure_fin' || field === 'prix_horaire') {
+      const hours = calculateHours(newLignes[index].heure_debut, newLignes[index].heure_fin);
+      newLignes[index].total = hours * newLignes[index].prix_horaire;
     }
     
     setLignes(newLignes);
@@ -162,7 +189,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       }
 
       reset();
-      setLignes([{ description: '', quantite: 1, prix_unitaire: 0, total: 0 }]);
+      setLignes([{ date: format(new Date(), 'yyyy-MM-dd'), heure_debut: '09:00', heure_fin: '17:00', description: '', prix_horaire: 0, total: 0 }]);
       setDateValidite(undefined);
       onOpenChange(false);
       onSuccess();
@@ -244,7 +271,31 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
             <div className="space-y-2">
               {lignes.map((ligne, index) => (
                 <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 border rounded-lg">
-                  <div className="col-span-5">
+                  <div className="col-span-2">
+                    <Label className="text-xs">Date</Label>
+                    <Input
+                      type="date"
+                      value={ligne.date}
+                      onChange={(e) => updateLigne(index, 'date', e.target.value)}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs">Heure début</Label>
+                    <Input
+                      type="time"
+                      value={ligne.heure_debut}
+                      onChange={(e) => updateLigne(index, 'heure_debut', e.target.value)}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs">Heure fin</Label>
+                    <Input
+                      type="time"
+                      value={ligne.heure_fin}
+                      onChange={(e) => updateLigne(index, 'heure_fin', e.target.value)}
+                    />
+                  </div>
+                  <div className="col-span-3">
                     <Label className="text-xs">Description</Label>
                     <Input
                       placeholder="Description"
@@ -252,27 +303,17 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       onChange={(e) => updateLigne(index, 'description', e.target.value)}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Quantité</Label>
+                  <div className="col-span-1">
+                    <Label className="text-xs">Prix/h</Label>
                     <Input
                       type="number"
                       min="0"
                       step="0.01"
-                      value={ligne.quantite}
-                      onChange={(e) => updateLigne(index, 'quantite', parseFloat(e.target.value) || 0)}
+                      value={ligne.prix_horaire}
+                      onChange={(e) => updateLigne(index, 'prix_horaire', parseFloat(e.target.value) || 0)}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Prix unitaire</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={ligne.prix_unitaire}
-                      onChange={(e) => updateLigne(index, 'prix_unitaire', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div className="col-span-2">
+                  <div className="col-span-1">
                     <Label className="text-xs">Total</Label>
                     <Input
                       type="number"
@@ -281,13 +322,23 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                       className="bg-muted"
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-1 flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => duplicateLigne(index)}
+                      title="Dupliquer"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => removeLigne(index)}
                       disabled={lignes.length === 1}
+                      title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
