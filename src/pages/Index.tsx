@@ -673,7 +673,10 @@ const Index = () => {
                 </a>
               </li>
               <li>
-                <PhoneReveal number="+32 493 42 34 78" size={16} />
+                <a href="tel:+32493423478" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Phone size={16} className="group-hover:text-salmon transition-colors"/>
+                  <span>+32 493 42 34 78</span>
+                </a>
               </li>
               <li className="flex items-center gap-2"><MapPin size={16}/> Bruxelles & Environs</li>
             </ul>
