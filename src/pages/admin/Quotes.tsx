@@ -312,6 +312,19 @@ const Quotes = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownload(quote)}
+                        disabled={downloadingPdf === quote.id}
+                        title="Télécharger le PDF"
+                      >
+                        {downloadingPdf === quote.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </Button>
                       {quote.statut !== 'envoye' && quote.statut !== 'accepte' && quote.statut !== 'refuse' && (
                         <Button
                           variant="ghost"
@@ -326,6 +339,7 @@ const Quotes = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(quote)}
+                        title="Modifier"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -333,6 +347,7 @@ const Quotes = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(quote.id)}
+                        title="Supprimer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
