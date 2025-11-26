@@ -20,6 +20,16 @@ interface InvoiceLine {
   total: number;
 }
 
+// Brand colors in RGB (converted from HSL)
+const BRAND_COLORS = {
+  salmon: { r: 252, g: 159, b: 113 }, // #FC9F71 - HSL(18, 87%, 73%)
+  sage: { r: 138, g: 186, b: 174 }, // #8ABAAE - HSL(164, 28%, 60%)
+  lavender: { r: 244, g: 232, b: 255 }, // #F4E8FF - HSL(254, 100%, 89%)
+  darkText: { r: 46, g: 54, b: 69 }, // #2E3645
+  lightText: { r: 100, g: 100, b: 100 },
+  white: { r: 255, g: 255, b: 255 }
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -32,7 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const { invoiceId }: GenerateInvoicePdfRequest = await req.json();
-    console.log('Generating PDF for invoice:', invoiceId);
+    console.log('Generating branded PDF for invoice:', invoiceId);
 
     // Fetch invoice with client info
     const { data: invoice, error: invoiceError } = await supabase
@@ -42,7 +52,11 @@ const handler = async (req: Request): Promise<Response> => {
         clients (
           nom,
           prenom,
-          email
+          email,
+          telephone,
+          adresse,
+          code_postal,
+          ville
         )
       `)
       .eq('id', invoiceId)
@@ -64,131 +78,333 @@ const handler = async (req: Request): Promise<Response> => {
       ? `${invoice.clients.prenom} ${invoice.clients.nom}` 
       : 'Client';
 
-    // Create PDF
+    // Create PDF with beautiful branding
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     
-    // Set font
-    doc.setFont('helvetica');
+    // ==================== HEADER WITH GRADIENT ====================
+    // Create gradient background effect with salmon color
+    for (let i = 0; i < 40; i++) {
+      const alpha = 1 - (i / 40);
+      const color = BRAND_COLORS.salmon;
+      doc.setFillColor(color.r, color.g, color.b);
+      doc.setGlobalAlpha(alpha * 0.15);
+      doc.rect(0, i * 0.5, pageWidth, 0.5, 'F');
+    }
+    doc.setGlobalAlpha(1);
     
-    // Header
-    doc.setFontSize(24);
-    doc.setTextColor(40, 40, 40);
-    doc.text('FACTURE', 105, 20, { align: 'center' });
+    // Decorative circles
+    doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
+    doc.circle(pageWidth - 20, 15, 25, 'F');
+    doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+    doc.circle(15, 10, 15, 'F');
     
-    // Company info
+    // Company name - large and bold
+    doc.setFontSize(28);
+    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NannySitting', 20, 25);
+    
+    // Tagline
+    doc.setFontSize(10);
+    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Plus qu\'une garde, une bulle de sérénité', 20, 31);
+    
+    // FACTURE title
+    doc.setFontSize(32);
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FACTURE', pageWidth - 20, 25, { align: 'right' });
+    
+    // Invoice number in salmon color
+    doc.setFontSize(14);
+    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoice.numero, pageWidth - 20, 32, { align: 'right' });
+    
+    // ==================== COMPANY & CLIENT INFO BOXES ====================
+    let yPos = 50;
+    
+    // Company info box with sage border
+    doc.setDrawColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(20, yPos, 80, 35, 3, 3, 'S');
+    
+    doc.setFontSize(9);
+    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DE', 25, yPos + 6);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.setFont('helvetica', 'bold');
     if (company) {
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(company.denomination_sociale, 20, 35);
+      doc.text(company.denomination_sociale, 25, yPos + 12);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+      let companyY = yPos + 17;
       if (company.adresse_siege) {
-        doc.text(company.adresse_siege, 20, 40);
+        const lines = doc.splitTextToSize(company.adresse_siege, 70);
+        doc.text(lines, 25, companyY);
+        companyY += lines.length * 3.5;
       }
       if (company.numero_tva) {
-        doc.text(`TVA: ${company.numero_tva}`, 20, 45);
+        doc.text(`TVA: ${company.numero_tva}`, 25, companyY);
+        companyY += 3.5;
+      }
+      if (company.telephone) {
+        doc.text(`Tél: ${company.telephone}`, 25, companyY);
       }
     }
     
-    // Invoice info
-    doc.setFontSize(12);
-    doc.setTextColor(40, 40, 40);
-    doc.text(`Facture N°: ${invoice.numero}`, 20, 60);
-    doc.setFontSize(10);
-    doc.text(`Date: ${new Date(invoice.created_at!).toLocaleDateString('fr-FR')}`, 20, 67);
-    if (invoice.date_echeance) {
-      doc.text(`Échéance: ${new Date(invoice.date_echeance).toLocaleDateString('fr-FR')}`, 20, 74);
-    }
+    // Client info box with lavender background
+    doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
+    doc.roundedRect(pageWidth - 100, yPos, 80, 35, 3, 3, 'F');
     
-    // Client info
-    doc.setFontSize(11);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Facturé à:', 140, 60);
+    doc.setFontSize(9);
+    doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FACTURÉ À', pageWidth - 95, yPos + 6);
+    
     doc.setFontSize(10);
-    doc.text(clientName, 140, 67);
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text(clientName, pageWidth - 95, yPos + 12);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    let clientY = yPos + 17;
     if (invoice.clients?.email) {
-      doc.text(invoice.clients.email, 140, 74);
+      doc.text(invoice.clients.email, pageWidth - 95, clientY);
+      clientY += 3.5;
+    }
+    if (invoice.clients?.telephone) {
+      doc.text(invoice.clients.telephone, pageWidth - 95, clientY);
+      clientY += 3.5;
+    }
+    if (invoice.clients?.adresse) {
+      const addressLines = doc.splitTextToSize(invoice.clients.adresse, 70);
+      doc.text(addressLines, pageWidth - 95, clientY);
+      clientY += addressLines.length * 3.5;
+    }
+    if (invoice.clients?.code_postal && invoice.clients?.ville) {
+      doc.text(`${invoice.clients.code_postal} ${invoice.clients.ville}`, pageWidth - 95, clientY);
     }
     
-    // Line separator
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 85, 190, 85);
+    // ==================== DATES SECTION ====================
+    yPos = 95;
     
-    // Table header
-    let yPos = 95;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, yPos - 5, 170, 8, 'F');
+    // Dates with icons effect
     doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    doc.text('Date', 22, yPos);
-    doc.text('Horaires', 50, yPos);
-    doc.text('Description', 85, yPos);
-    doc.text('Prix/h', 140, yPos);
-    doc.text('Total', 170, yPos);
+    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    doc.setFont('helvetica', 'normal');
     
-    yPos += 10;
+    // Date
+    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.circle(22, yPos - 1, 1.5, 'F');
+    doc.text('Date de facturation', 27, yPos);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.text(new Date(invoice.created_at!).toLocaleDateString('fr-FR', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric' 
+    }), 70, yPos);
     
-    // Table rows
+    // Due date
+    if (invoice.date_echeance) {
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+      doc.setFillColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+      doc.circle(22, yPos - 1, 1.5, 'F');
+      doc.text('Date d\'échéance', 27, yPos);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+      doc.text(new Date(invoice.date_echeance).toLocaleDateString('fr-FR', { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric' 
+      }), 70, yPos);
+    }
+    
+    // ==================== DECORATIVE LINE ====================
+    yPos = 115;
+    doc.setDrawColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.setLineWidth(1);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+    
+    // ==================== TABLE HEADER ====================
+    yPos = 125;
+    
+    // Gradient header background
+    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.roundedRect(20, yPos - 6, pageWidth - 40, 10, 2, 2, 'F');
+    
     doc.setFontSize(9);
-    doc.setTextColor(40, 40, 40);
-    lignes.forEach((ligne: InvoiceLine) => {
-      if (yPos > 270) {
+    doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DATE', 25, yPos);
+    doc.text('HORAIRES', 52, yPos);
+    doc.text('DESCRIPTION', 85, yPos);
+    doc.text('PRIX/H', 145, yPos);
+    doc.text('TOTAL', pageWidth - 25, yPos, { align: 'right' });
+    
+    // ==================== TABLE ROWS ====================
+    yPos += 8;
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    
+    lignes.forEach((ligne: InvoiceLine, index: number) => {
+      if (yPos > 250) {
         doc.addPage();
-        yPos = 20;
+        yPos = 30;
+        
+        // Repeat header on new page
+        doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+        doc.roundedRect(20, yPos - 6, pageWidth - 40, 10, 2, 2, 'F');
+        doc.setFontSize(9);
+        doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
+        doc.setFont('helvetica', 'bold');
+        doc.text('DATE', 25, yPos);
+        doc.text('HORAIRES', 52, yPos);
+        doc.text('DESCRIPTION', 85, yPos);
+        doc.text('PRIX/H', 145, yPos);
+        doc.text('TOTAL', pageWidth - 25, yPos, { align: 'right' });
+        yPos += 8;
+        doc.setFont('helvetica', 'normal');
       }
       
-      doc.text(new Date(ligne.date).toLocaleDateString('fr-FR'), 22, yPos);
-      doc.text(`${ligne.heure_debut}-${ligne.heure_fin}`, 50, yPos);
-      doc.text(ligne.description.substring(0, 25), 85, yPos);
-      doc.text(`${ligne.prix_horaire.toFixed(2)} €`, 140, yPos);
-      doc.text(`${ligne.total.toFixed(2)} €`, 170, yPos);
+      // Alternating row background
+      if (index % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(20, yPos - 5, pageWidth - 40, 7, 'F');
+      }
+      
+      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+      doc.text(new Date(ligne.date).toLocaleDateString('fr-FR'), 25, yPos);
+      doc.text(`${ligne.heure_debut} - ${ligne.heure_fin}`, 52, yPos);
+      
+      // Wrap description if too long
+      const descLines = doc.splitTextToSize(ligne.description, 55);
+      doc.text(descLines[0], 85, yPos);
+      
+      doc.text(`${ligne.prix_horaire.toFixed(2)} €`, 145, yPos);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+      doc.text(`${ligne.total.toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
       
       yPos += 7;
     });
     
-    // Line separator
+    // ==================== TOTALS SECTION ====================
     yPos += 5;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, 190, yPos);
     
-    // Totals
-    yPos += 10;
+    // Decorative line before totals
+    doc.setDrawColor(BRAND_COLORS.sage.r, BRAND_COLORS.sage.g, BRAND_COLORS.sage.b);
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - 100, yPos, pageWidth - 20, yPos);
+    
+    yPos += 8;
+    
+    // Subtotal
     doc.setFontSize(10);
-    doc.text('Montant HT:', 140, yPos);
-    doc.text(`${invoice.montant_ht?.toFixed(2)} €`, 170, yPos);
+    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Montant HT', pageWidth - 75, yPos);
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${invoice.montant_ht?.toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
     
-    yPos += 7;
-    doc.text(`TVA (${invoice.tva}%):`, 140, yPos);
-    doc.text(`${((invoice.montant_ttc || 0) - (invoice.montant_ht || 0)).toFixed(2)} €`, 170, yPos);
+    yPos += 6;
+    
+    // TVA
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    doc.text(`TVA (${invoice.tva}%)`, pageWidth - 75, yPos);
+    doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${((invoice.montant_ttc || 0) - (invoice.montant_ht || 0)).toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
     
     yPos += 10;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Montant TTC:', 140, yPos);
-    doc.text(`${invoice.montant_ttc?.toFixed(2)} €`, 170, yPos);
     
-    // Notes
+    // Total box with salmon gradient
+    doc.setFillColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+    doc.roundedRect(pageWidth - 100, yPos - 8, 80, 15, 3, 3, 'F');
+    
+    doc.setFontSize(12);
+    doc.setTextColor(BRAND_COLORS.white.r, BRAND_COLORS.white.g, BRAND_COLORS.white.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MONTANT TOTAL TTC', pageWidth - 95, yPos);
+    
+    doc.setFontSize(16);
+    doc.text(`${invoice.montant_ttc?.toFixed(2)} €`, pageWidth - 25, yPos, { align: 'right' });
+    
+    // ==================== NOTES SECTION ====================
     if (invoice.notes) {
-      yPos += 15;
+      yPos += 20;
+      
+      if (yPos > 240) {
+        doc.addPage();
+        yPos = 30;
+      }
+      
+      // Notes box with lavender background
+      doc.setFillColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
+      const notesLines = doc.splitTextToSize(invoice.notes, pageWidth - 50);
+      const notesHeight = notesLines.length * 4 + 10;
+      doc.roundedRect(20, yPos - 5, pageWidth - 40, notesHeight, 3, 3, 'F');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(BRAND_COLORS.salmon.r, BRAND_COLORS.salmon.g, BRAND_COLORS.salmon.b);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Notes', 25, yPos);
+      
       doc.setFontSize(9);
+      doc.setTextColor(BRAND_COLORS.darkText.r, BRAND_COLORS.darkText.g, BRAND_COLORS.darkText.b);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      doc.text('Notes:', 20, yPos);
-      const splitNotes = doc.splitTextToSize(invoice.notes, 170);
-      doc.text(splitNotes, 20, yPos + 5);
+      doc.text(notesLines, 25, yPos + 5);
     }
     
-    // Footer
+    // ==================== FOOTER ====================
+    const footerY = pageHeight - 20;
+    
+    // Footer decorative line
+    doc.setDrawColor(BRAND_COLORS.lavender.r, BRAND_COLORS.lavender.g, BRAND_COLORS.lavender.b);
+    doc.setLineWidth(0.5);
+    doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+    
     doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+    doc.setFont('helvetica', 'italic');
+    
+    if (company?.email || company?.site_web) {
+      let footerText = '';
+      if (company.email) footerText += company.email;
+      if (company.site_web) footerText += (footerText ? ' • ' : '') + company.site_web;
+      doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
+    }
+    
+    // Page numbers
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.text(`Page ${i} sur ${pageCount}`, 105, 285, { align: 'center' });
+      doc.setFontSize(8);
+      doc.setTextColor(BRAND_COLORS.lightText.r, BRAND_COLORS.lightText.g, BRAND_COLORS.lightText.b);
+      doc.text(`Page ${i} sur ${pageCount}`, pageWidth - 20, footerY, { align: 'right' });
     }
     
     // Generate PDF as base64
     const pdfBase64 = doc.output('datauristring');
     
-    console.log('PDF generated successfully');
+    console.log('Beautiful branded PDF generated successfully');
 
     return new Response(
       JSON.stringify({ 
