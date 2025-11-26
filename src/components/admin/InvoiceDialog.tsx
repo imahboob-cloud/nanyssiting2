@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -77,6 +77,25 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     loadTarifs();
   }, []);
 
+  const getAppropriateTarif = useCallback((date: string) => {
+    const dayOfWeek = getDay(new Date(date));
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+    
+    // Filter tarifs based on day type
+    const appropriateTarifs = tarifs.filter(t => 
+      t.type_jour === 'tous' || 
+      (isWeekend && t.type_jour === 'weekend') || 
+      (!isWeekend && t.type_jour === 'semaine')
+    );
+    
+    // Prioritize specific day type over 'tous'
+    const specificTarif = appropriateTarifs.find(t => 
+      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
+    );
+    
+    return specificTarif || appropriateTarifs[0];
+  }, [tarifs]);
+
   // Initialize first line with appropriate tarif when tarifs are loaded
   useEffect(() => {
     if (tarifs.length > 0 && lignes.length === 1 && !lignes[0].description && !invoice && !quoteData) {
@@ -93,7 +112,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
         }]);
       }
     }
-  }, [tarifs]);
+  }, [tarifs, lignes, invoice, quoteData, getAppropriateTarif]);
 
   useEffect(() => {
     if (quoteData) {
@@ -148,25 +167,6 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     } catch {
       return 0;
     }
-  };
-
-  const getAppropriateTarif = (date: string) => {
-    const dayOfWeek = getDay(new Date(date));
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
-    
-    // Filter tarifs based on day type
-    const appropriateTarifs = tarifs.filter(t => 
-      t.type_jour === 'tous' || 
-      (isWeekend && t.type_jour === 'weekend') || 
-      (!isWeekend && t.type_jour === 'semaine')
-    );
-    
-    // Prioritize specific day type over 'tous'
-    const specificTarif = appropriateTarifs.find(t => 
-      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
-    );
-    
-    return specificTarif || appropriateTarifs[0];
   };
 
   const addLigne = () => {
