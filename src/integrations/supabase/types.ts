@@ -304,6 +304,36 @@ export type Database = {
           },
         ]
       }
+      tarifs: {
+        Row: {
+          actif: boolean
+          created_at: string
+          id: string
+          nom: string
+          tarif_horaire: number
+          type_jour: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          nom: string
+          tarif_horaire: number
+          type_jour: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          nom?: string
+          tarif_horaire?: number
+          type_jour?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

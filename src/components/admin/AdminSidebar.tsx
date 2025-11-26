@@ -18,7 +18,8 @@ import {
   UserCheck, 
   Calendar, 
   FileText, 
-  Receipt 
+  Receipt,
+  DollarSign
 } from 'lucide-react';
 
 const menuItems = [
@@ -29,6 +30,7 @@ const menuItems = [
   { title: 'Calendrier', url: '/admin/calendar', icon: Calendar },
   { title: 'Devis', url: '/admin/quotes', icon: FileText },
   { title: 'Factures', url: '/admin/invoices', icon: Receipt },
+  { title: 'Tarifs', url: '/admin/tarifs', icon: DollarSign },
 ];
 
 export function AdminSidebar() {
