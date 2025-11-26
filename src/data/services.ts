@@ -51,16 +51,6 @@ export const services: Service[] = [
     author: "Chloé, maman de Mia (6 ans)"
   },
   {
-    id: 'soins',
-    title: "Rituel du Soir & Bain",
-    shortDesc: "Repas, pyjama et histoire pour un coucher apaisé avant votre retour.",
-    fullDesc: "Les fins de journées sont souvent chargées. Nous gérons le tunnel du soir : aide aux repas, bain/douche, brossage des dents et mise en pyjama. Nous instaurons un rituel calme pour que vous retrouviez des enfants détendus et prêts à dormir.",
-    icon: "Moon",
-    color: 'sage',
-    testimonial: "Quand je rentre tard, c'est un soulagement de savoir que mon petit est déjà en pyjama. Je profite juste du câlin du soir.",
-    author: "Thomas, papa de Léo (3 ans)"
-  },
-  {
     id: 'post-partum',
     title: "Relais Maman & Post-Partum",
     shortDesc: "Une aide précieuse pour les aînés pendant que vous profitez de bébé.",
