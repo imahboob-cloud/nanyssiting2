@@ -3,11 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Columns3, CalendarDays } from 'lucide-react';
 import { MissionDialog } from '@/components/admin/MissionDialog';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, subDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+
+type CalendarView = 'month' | 'week' | 'day';
 
 const statusColors = {
   planifie: 'bg-blue-500',
@@ -26,6 +28,7 @@ const statusLabels = {
 const Calendar = () => {
   const [missions, setMissions] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<CalendarView>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<any>(null);
@@ -33,11 +36,22 @@ const Calendar = () => {
 
   useEffect(() => {
     loadMissions();
-  }, [currentDate]);
+  }, [currentDate, view]);
 
   const loadMissions = async () => {
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
+    let start: Date;
+    let end: Date;
+
+    if (view === 'month') {
+      start = startOfMonth(currentDate);
+      end = endOfMonth(currentDate);
+    } else if (view === 'week') {
+      start = startOfWeek(currentDate, { locale: fr });
+      end = endOfWeek(currentDate, { locale: fr });
+    } else {
+      start = startOfDay(currentDate);
+      end = endOfDay(currentDate);
+    }
 
     const { data, error } = await supabase
       .from('missions')
@@ -61,10 +75,21 @@ const Calendar = () => {
     }
   };
 
-  const days = eachDayOfInterval({
-    start: startOfMonth(currentDate),
-    end: endOfMonth(currentDate),
-  });
+  const getDaysToDisplay = () => {
+    if (view === 'month') {
+      return eachDayOfInterval({
+        start: startOfMonth(currentDate),
+        end: endOfMonth(currentDate),
+      });
+    } else if (view === 'week') {
+      return eachDayOfInterval({
+        start: startOfWeek(currentDate, { locale: fr }),
+        end: endOfWeek(currentDate, { locale: fr }),
+      });
+    } else {
+      return [currentDate];
+    }
+  };
 
   const getMissionsForDay = (day: Date) => {
     return missions.filter((mission) => {
@@ -92,8 +117,39 @@ const Calendar = () => {
     setDialogOpen(true);
   };
 
-  const previousMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const previousPeriod = () => {
+    if (view === 'month') {
+      setCurrentDate(subMonths(currentDate, 1));
+    } else if (view === 'week') {
+      setCurrentDate(subWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(subDays(currentDate, 1));
+    }
+  };
+
+  const nextPeriod = () => {
+    if (view === 'month') {
+      setCurrentDate(addMonths(currentDate, 1));
+    } else if (view === 'week') {
+      setCurrentDate(addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(addDays(currentDate, 1));
+    }
+  };
+
+  const getTitle = () => {
+    if (view === 'month') {
+      return format(currentDate, 'MMMM yyyy', { locale: fr });
+    } else if (view === 'week') {
+      const start = startOfWeek(currentDate, { locale: fr });
+      const end = endOfWeek(currentDate, { locale: fr });
+      return `${format(start, 'd MMM', { locale: fr })} - ${format(end, 'd MMM yyyy', { locale: fr })}`;
+    } else {
+      return format(currentDate, 'EEEE d MMMM yyyy', { locale: fr });
+    }
+  };
+
+  const days = getDaysToDisplay();
 
   return (
     <div className="space-y-6">
@@ -110,19 +166,44 @@ const Calendar = () => {
 
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <Button variant="outline" size="icon" onClick={previousMonth}>
+          <Button variant="outline" size="icon" onClick={previousPeriod}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="text-xl font-semibold capitalize">
-            {format(currentDate, 'MMMM yyyy', { locale: fr })}
-          </h3>
-          <Button variant="outline" size="icon" onClick={nextMonth}>
+          <div className="flex items-center gap-4">
+            <h3 className="text-xl font-semibold capitalize">
+              {getTitle()}
+            </h3>
+            <div className="flex gap-1 border rounded-lg p-1">
+              <Button
+                variant={view === 'month' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('month')}
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={view === 'week' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('week')}
+              >
+                <Columns3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={view === 'day' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('day')}
+              >
+                <CalendarDays className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <Button variant="outline" size="icon" onClick={nextPeriod}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
-          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
+        <div className={`grid gap-2 ${view === 'month' ? 'grid-cols-7' : view === 'week' ? 'grid-cols-7' : 'grid-cols-1'}`}>
+          {view !== 'day' && ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
             <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
               {day}
             </div>
@@ -131,27 +212,36 @@ const Calendar = () => {
           {days.map((day, idx) => {
             const dayMissions = getMissionsForDay(day);
             const isToday = isSameDay(day, new Date());
-            const isCurrentMonth = isSameMonth(day, currentDate);
+            const isCurrentMonth = view === 'month' ? isSameMonth(day, currentDate) : true;
 
             return (
               <div
                 key={idx}
                 onClick={() => handleDayClick(day)}
-                className={`min-h-[100px] p-2 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
+                className={`${view === 'day' ? 'min-h-[500px]' : 'min-h-[100px]'} p-2 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
                   !isCurrentMonth ? 'opacity-40' : ''
                 } ${isToday ? 'border-primary' : ''}`}
               >
                 <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : ''}`}>
-                  {format(day, 'd')}
+                  {view === 'day' ? format(day, 'EEEE d MMMM yyyy', { locale: fr }) : format(day, 'd')}
                 </div>
                 <div className="space-y-1">
                   {dayMissions.map((mission) => (
                     <div
                       key={mission.id}
                       onClick={(e) => handleMissionClick(mission, e)}
-                      className={`text-xs p-1 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white truncate hover:opacity-80`}
+                      className={`text-xs p-2 rounded ${statusColors[mission.statut as keyof typeof statusColors]} text-white hover:opacity-80 ${
+                        view === 'day' ? '' : 'truncate'
+                      }`}
                     >
-                      {mission.clients?.nom} {format(new Date(mission.date_debut), 'HH:mm')}
+                      <div className="font-medium">{mission.clients?.nom} {mission.clients?.prenom}</div>
+                      <div>{format(new Date(mission.date_debut), 'HH:mm')} - {format(new Date(mission.date_fin), 'HH:mm')}</div>
+                      {mission.nannysitters && (
+                        <div className="text-xs opacity-90">{mission.nannysitters.prenom} {mission.nannysitters.nom}</div>
+                      )}
+                      {view === 'day' && mission.description && (
+                        <div className="mt-1 text-xs opacity-90">{mission.description}</div>
+                      )}
                     </div>
                   ))}
                 </div>
