@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2, Send, Receipt } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send, Receipt, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -34,6 +34,7 @@ type QuoteWithClient = Quote & {
     prenom: string;
     email: string | null;
   } | null;
+  invoices?: Array<{ id: string; numero: string }>;
 };
 
 const Quotes = () => {
@@ -47,6 +48,7 @@ const Quotes = () => {
   const [quoteToSend, setQuoteToSend] = useState<QuoteWithClient | null>(null);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [quoteForInvoice, setQuoteForInvoice] = useState<QuoteWithClient | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -55,7 +57,7 @@ const Quotes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quotes")
-        .select("*, clients(nom, prenom, email)")
+        .select("*, clients(nom, prenom, email), invoices(id, numero)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -116,6 +118,31 @@ const Quotes = () => {
   const handleGenerateInvoice = (quote: QuoteWithClient) => {
     setQuoteForInvoice(quote);
     setInvoiceDialogOpen(true);
+  };
+
+  const handleDownload = async (quote: QuoteWithClient) => {
+    setDownloadingPdf(quote.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-quote-pdf', {
+        body: { quoteId: quote.id },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Devis-${quote.numero}.pdf`;
+        link.click();
+        
+        toast.success('PDF téléchargé avec succès');
+      }
+    } catch (error: any) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Erreur lors du téléchargement du PDF');
+    } finally {
+      setDownloadingPdf(null);
+    }
   };
 
   const getStatusBadge = (statut: string) => {
@@ -227,7 +254,30 @@ const Quotes = () => {
                   <TableCell>{getStatusBadge(quote.statut || "brouillon")}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      {quote.statut === 'accepte' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownload(quote)}
+                        disabled={downloadingPdf === quote.id}
+                        title="Télécharger le PDF"
+                      >
+                        {downloadingPdf === quote.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </Button>
+                      {quote.statut !== 'envoye' && quote.statut !== 'accepte' && quote.statut !== 'refuse' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleSend(quote)}
+                          title="Envoyer le devis"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {quote.statut === 'accepte' && !quote.invoices?.length && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -237,14 +287,11 @@ const Quotes = () => {
                           <Receipt className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleSend(quote)}
-                        title="Envoyer le devis"
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
+                      {quote.invoices && quote.invoices.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          Facture: {quote.invoices[0].numero}
+                        </Badge>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"

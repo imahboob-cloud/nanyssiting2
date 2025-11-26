@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Send, Mail } from 'lucide-react';
+import { Loader2, Send, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
@@ -27,6 +27,7 @@ interface SendQuoteDialogProps {
 export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQuoteDialogProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const { toast } = useToast();
 
   // Update email when quote changes
@@ -37,6 +38,40 @@ export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQu
       setEmail('');
     }
   }, [quote]);
+
+  const handleDownloadPdf = async () => {
+    if (!quote) return;
+
+    setDownloadingPdf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-quote-pdf', {
+        body: { quoteId: quote.id },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Devis-${quote.numero}.pdf`;
+        link.click();
+        
+        toast({
+          title: 'PDF téléchargé',
+          description: 'Le devis a été téléchargé avec succès',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de télécharger le PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!quote || !email) {
@@ -104,6 +139,25 @@ export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQu
           <DialogTitle>Envoyer le devis</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="w-full"
+          >
+            {downloadingPdf ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Téléchargement...
+              </>
+            ) : (
+              <>
+                <FileText className="mr-2 h-4 w-4" />
+                Télécharger le PDF
+              </>
+            )}
+          </Button>
           <div className="p-4 border rounded-lg space-y-2 bg-muted">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Numéro:</span>

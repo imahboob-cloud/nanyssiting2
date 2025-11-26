@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CalendarIcon, Plus, Trash2, Copy } from 'lucide-react';
+import { Loader2, CalendarIcon, Plus, Trash2, Copy, Download } from 'lucide-react';
 import { format, parse, differenceInHours, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -45,6 +45,7 @@ interface QuoteDialogProps {
 
 export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [dateValidite, setDateValidite] = useState<Date | undefined>(() => {
     const defaultDate = new Date();
@@ -240,6 +241,47 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
   };
 
   const { montant_ht, montant_tva, montant_ttc } = calculateTotals();
+
+  const handleDownloadPdf = async () => {
+    if (!quote) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez d\'abord sauvegarder le devis',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDownloadingPdf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-quote-pdf', {
+        body: { quoteId: quote.id },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Devis-${quote.numero}.pdf`;
+        link.click();
+        
+        toast({
+          title: 'PDF téléchargé',
+          description: 'Le devis a été téléchargé avec succès',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de télécharger le PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -473,6 +515,26 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
+            {quote && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleDownloadPdf}
+                disabled={downloadingPdf}
+              >
+                {downloadingPdf ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Téléchargement...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Télécharger PDF
+                  </>
+                )}
+              </Button>
+            )}
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {quote ? 'Mettre à jour' : 'Créer'}
