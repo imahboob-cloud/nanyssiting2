@@ -1,6 +1,5 @@
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { MapPin } from 'lucide-react';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -16,8 +15,8 @@ interface AddressAutocompleteProps {
 function extractBelgianPostalAndCity(raw: string): { postalCode?: string; city?: string } {
   const value = raw.trim();
 
-  // Cherche un CP belge (4 chiffres) suivi d'une ville
-  const cpVilleRegex = /(\d{4})\s+([A-Za-zÀ-ÿ'’\-\s]{2,})$/;
+  // Cherche un CP belge (4 chiffres) suivi d'une ville, éventuellement suivi d'autres infos (pays, etc.)
+  const cpVilleRegex = /(?:(?:^|[,\n]))\s*(\d{4})\s+([A-Za-zÀ-ÿ'’\-\s]{2,})(?=,|$)/;
   const match = value.match(cpVilleRegex);
 
   if (match) {
@@ -42,7 +41,7 @@ export function AddressAutocomplete({
   const handleInputChange = (newValue: string) => {
     onChange(newValue);
 
-    // Extraction locale sans API : si l'utilisateur tape "Rue X 123, 1050 Ixelles"
+    // Extraction locale sans API : si l'utilisateur tape "Rue X 123, 1050 Ixelles, Belgique"
     const cleaned = newValue.replace(',', ' ');
     const { postalCode, city } = extractBelgianPostalAndCity(cleaned);
 
@@ -56,20 +55,14 @@ export function AddressAutocomplete({
 
   const inputClasses =
     variant === 'branded'
-      ? 'w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors pl-11'
-      : 'pl-10';
+      ? 'w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors'
+      : '';
 
   const detection = extractBelgianPostalAndCity(value.replace(',', ' '));
 
   return (
     <div className="space-y-1.5">
       <div className="relative">
-        <MapPin
-          className={cn(
-            'absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
-            variant === 'branded' && 'text-salmon',
-          )}
-        />
         <Input
           type="text"
           value={value}
