@@ -63,6 +63,14 @@ export function AddressAutocomplete({
       );
       const data = await response.json();
       
+      // Vérifier si features existe
+      if (!data || !data.features || !Array.isArray(data.features)) {
+        console.warn('No features in response:', data);
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      
       const formattedSuggestions: AddressSuggestion[] = data.features.map((feature: any) => {
         const props = feature.properties;
         const street = props.street || props.name || '';
@@ -88,11 +96,12 @@ export function AddressAutocomplete({
       });
 
       setSuggestions(formattedSuggestions);
-      setShowSuggestions(true);
+      setShowSuggestions(formattedSuggestions.length > 0);
       setSelectedIndex(-1);
     } catch (error) {
       console.error('Error fetching address suggestions:', error);
       setSuggestions([]);
+      setShowSuggestions(false);
     } finally {
       setIsLoading(false);
     }
