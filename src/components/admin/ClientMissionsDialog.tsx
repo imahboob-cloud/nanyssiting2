@@ -412,8 +412,10 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
                               {getMissionStatusBadge(mission.statut || 'planifie')}
                             </div>
                             
+                            <p className="text-sm text-muted-foreground">{getDescription(mission.date)}</p>
+                            
                             {mission.description && (
-                              <p className="text-sm text-muted-foreground">{mission.description}</p>
+                              <p className="text-sm text-muted-foreground italic">Note: {mission.description}</p>
                             )}
                             
                             {mission.nannysitters && (
