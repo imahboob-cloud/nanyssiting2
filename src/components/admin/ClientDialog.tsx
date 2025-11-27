@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 const clientSchema = z.object({
   nom: z.string().trim().min(1, 'Le nom est requis').max(100),
@@ -151,11 +152,13 @@ export function ClientDialog({ open, onOpenChange, client, onSave, loading = fal
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="adresse">Adresse (lieu de prestation)</Label>
-              <Input 
-                id="adresse" 
-                {...register('adresse')} 
+              <AddressAutocomplete
+                value={watch('adresse') || ''}
+                onChange={(value) => setValue('adresse', value, { shouldDirty: true })}
+                onPostalCodeChange={(value) => setValue('code_postal', value, { shouldDirty: true })}
+                onCityChange={(value) => setValue('ville', value, { shouldDirty: true })}
+                placeholder="Commencez à taper l'adresse..."
                 disabled={loading}
-                placeholder="Rue et numéro où la babysitter devra se rendre"
               />
               {errors.adresse && <p className="text-sm text-destructive">{errors.adresse.message}</p>}
             </div>

@@ -29,6 +29,7 @@ import SuccessPopup from '@/components/SuccessPopup';
 import { services, Service } from '@/data/services';
 import { cn } from '@/lib/utils';
 import heroBabysitter from '@/assets/hero-babysitter.jpg';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 // Icon mapping
 const iconMap: Record<string, any> = {
@@ -274,12 +275,13 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">
                   Adresse (lieu de prestation)
                 </label>
-                <input 
-                  type="text"
+                <AddressAutocomplete
                   value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  className="w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors"
-                  placeholder="Rue et numéro où se déroulera la garde"
+                  onChange={(value) => setFormData({...formData, address: value})}
+                  onPostalCodeChange={(value) => setFormData({...formData, postalCode: value})}
+                  onCityChange={(value) => setFormData({...formData, city: value})}
+                  placeholder="Commencez à taper votre adresse..."
+                  variant="branded"
                 />
               </div>
 
