@@ -186,13 +186,13 @@ export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQu
             />
           </div>
         </div>
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-start">
           <Button
             type="button"
             variant="outline"
             onClick={handleSendLater}
             disabled={loading}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto sm:min-w-[180px]"
           >
             Envoyer plus tard
           </Button>
@@ -200,7 +200,7 @@ export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQu
             type="button"
             onClick={handleSend}
             disabled={loading || !email}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto sm:min-w-[180px]"
           >
             {loading ? (
               <>
