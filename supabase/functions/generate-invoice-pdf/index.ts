@@ -68,8 +68,16 @@ const handler = async (req: Request): Promise<Response> => {
       iban: '',
       telephone: '+971 58 598 4937',
       email: 'contact@nannysitting.be',
-      site_web: 'www.nannysitting.be'
+      site_web: 'www.nannysitting.be',
+      logo_url: null
     };
+
+    console.log('Company info loaded:', {
+      denomination: company.denomination_sociale,
+      tva: company.numero_tva,
+      iban: company.iban,
+      has_logo: !!company.logo_url
+    });
 
     const lignes = invoice.lignes as InvoiceLine[] || [];
     const clientName = invoice.clients 
@@ -120,8 +128,11 @@ const handler = async (req: Request): Promise<Response> => {
     doc.text(company.adresse_siege || '', margin, yPos + 5);
     doc.text(`TVA: ${company.numero_tva || ''}`, margin, yPos + 10);
     doc.text(`Tél: ${company.telephone || ''}`, margin, yPos + 15);
+    if (company.email && company.email !== 'contact@nannysitting.be') {
+      doc.text(`Email: ${company.email}`, margin, yPos + 20);
+    }
     if (company.iban) {
-      doc.text(`IBAN: ${company.iban}`, margin, yPos + 20);
+      doc.text(`IBAN: ${company.iban}`, margin, yPos + 25);
     }
 
     // Invoice Title & Number (Right side)
