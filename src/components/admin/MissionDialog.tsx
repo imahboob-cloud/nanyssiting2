@@ -120,6 +120,39 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
     }
   }, [mission, selectedDate, setValue, tarifs]);
 
+  // Auto-save when nannysitter changes (only for existing missions)
+  useEffect(() => {
+    if (!mission) return; // Only for editing existing missions
+    
+    const currentNannysitterId = watch('nannysitter_id');
+    const originalNannysitterId = mission.nannysitter_id || '';
+    
+    // Only update if the value has actually changed
+    if (currentNannysitterId !== originalNannysitterId) {
+      const autoSave = async () => {
+        try {
+          const { error } = await supabase
+            .from('missions')
+            .update({ nannysitter_id: currentNannysitterId || null })
+            .eq('id', mission.id);
+
+          if (error) throw error;
+          
+          toast({ title: 'NannySitter mise à jour automatiquement' });
+          onSuccess();
+        } catch (error: any) {
+          toast({
+            title: 'Erreur',
+            description: error.message,
+            variant: 'destructive',
+          });
+        }
+      };
+      
+      autoSave();
+    }
+  }, [watch('nannysitter_id'), mission]);
+
   // Recalculate amount when date or hours change
   useEffect(() => {
     if (date && heureDebut && heureFin && tarifs.length > 0) {
