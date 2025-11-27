@@ -158,8 +158,10 @@ All colors MUST be HSL.
     font-family: 'Quicksand', sans-serif;
   }
   
-  /* Hide reCAPTCHA badge */
+  /* Hide reCAPTCHA badge completely */
   .grecaptcha-badge {
     visibility: hidden !important;
+    opacity: 0 !important;
+    display: none !important;
   }
 }
