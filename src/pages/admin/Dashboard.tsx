@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { FormRecapDialog } from '@/components/admin/FormRecapDialog';
+import { MissionDialog } from '@/components/admin/MissionDialog';
 
 interface Stats {
   prospects: number;
@@ -16,6 +19,7 @@ interface Stats {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     prospects: 0,
     clients: 0,
@@ -26,6 +30,10 @@ const Dashboard = () => {
   const [recentProspects, setRecentProspects] = useState<any[]>([]);
   const [upcomingMissions, setUpcomingMissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProspect, setSelectedProspect] = useState<any>(null);
+  const [recapDialogOpen, setRecapDialogOpen] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<any>(null);
+  const [missionDialogOpen, setMissionDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -48,11 +56,12 @@ const Dashboard = () => {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
+      const startOfMonthStr = format(startOfMonth, 'yyyy-MM-dd');
 
       const { data: missionsData } = await supabase
         .from('missions')
         .select('*')
-        .gte('date_debut', startOfMonth.toISOString());
+        .gte('date', startOfMonthStr);
 
       // Fetch invoices paid this month
       const { data: invoicesData } = await supabase
@@ -72,11 +81,13 @@ const Dashboard = () => {
         .limit(5);
 
       // Fetch upcoming missions
+      const today = format(new Date(), 'yyyy-MM-dd');
       const { data: upcomingData } = await supabase
         .from('missions')
         .select('*, clients(prenom, nom), nannysitters(prenom, nom)')
-        .gte('date_debut', new Date().toISOString())
-        .order('date_debut', { ascending: true })
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .order('heure_debut', { ascending: true })
         .limit(5);
 
       setStats({
@@ -147,7 +158,14 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-3">
                 {recentProspects.map((prospect) => (
-                  <div key={prospect.id} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
+                  <div 
+                    key={prospect.id} 
+                    className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors"
+                    onClick={() => {
+                      setSelectedProspect(prospect);
+                      setRecapDialogOpen(true);
+                    }}
+                  >
                     <div>
                       <p className="font-medium">{prospect.prenom} {prospect.nom}</p>
                       <p className="text-sm text-muted-foreground">{prospect.email}</p>
@@ -173,7 +191,14 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-3">
                 {upcomingMissions.map((mission: any) => (
-                  <div key={mission.id} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
+                  <div 
+                    key={mission.id} 
+                    className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors"
+                    onClick={() => {
+                      setSelectedMission(mission);
+                      setMissionDialogOpen(true);
+                    }}
+                  >
                     <div>
                       <p className="font-medium">
                         {mission.clients?.prenom} {mission.clients?.nom}
@@ -184,7 +209,7 @@ const Dashboard = () => {
                           'À attribuer'}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {format(new Date(mission.date_debut), 'dd MMM yyyy HH:mm', { locale: fr })}
+                        {format(new Date(mission.date), 'dd MMM yyyy', { locale: fr })} à {mission.heure_debut}
                       </p>
                     </div>
                     <Badge variant={mission.nannysitter_id ? 'default' : 'secondary'}>
@@ -197,6 +222,19 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <FormRecapDialog
+        open={recapDialogOpen}
+        onOpenChange={setRecapDialogOpen}
+        client={selectedProspect}
+      />
+
+      <MissionDialog
+        open={missionDialogOpen}
+        onOpenChange={setMissionDialogOpen}
+        mission={selectedMission}
+        onSuccess={fetchDashboardData}
+      />
     </div>
   );
 };
