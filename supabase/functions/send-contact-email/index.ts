@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { Resend } from "npm:resend@4.0.0";
 
 // Declare EdgeRuntime for background tasks
 declare const EdgeRuntime: {
@@ -10,6 +10,7 @@ declare const EdgeRuntime: {
 
 const GMAIL_USER = Deno.env.get('GMAIL_USER') as string;
 const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') as string;
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') as string;
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -327,51 +328,30 @@ serve(async (req) => {
     // Send emails in BACKGROUND (non-blocking)
     const sendEmails = async () => {
       try {
-        // Send notification to company
-        const companySmtpClient = new SMTPClient({
-          connection: {
-            hostname: "smtp.gmail.com",
-            port: 465,
-            tls: true,
-            auth: {
-              username: GMAIL_USER,
-              password: GMAIL_APP_PASSWORD,
-            },
-          },
-        });
+        if (!RESEND_API_KEY) {
+          console.error('RESEND_API_KEY is not configured');
+          return;
+        }
 
-        await companySmtpClient.send({
-          from: GMAIL_USER,
-          to: 'contact@nannysitting.be',
+        const resend = new Resend(RESEND_API_KEY);
+
+        // Send notification to company
+        await resend.emails.send({
+          from: `NannySitting <contact@nannysitting.be>`,
+          to: ['contact@nannysitting.be'],
           replyTo: email,
           subject: `Nouvelle demande de ${name} - ${service}`,
           html: createEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
         });
-
-        await companySmtpClient.close();
         console.log('Company notification sent');
 
         // Send confirmation to client
-        const clientSmtpClient = new SMTPClient({
-          connection: {
-            hostname: "smtp.gmail.com",
-            port: 465,
-            tls: true,
-            auth: {
-              username: GMAIL_USER,
-              password: GMAIL_APP_PASSWORD,
-            },
-          },
-        });
-
-        await clientSmtpClient.send({
-          from: GMAIL_USER,
-          to: email,
+        await resend.emails.send({
+          from: `NannySitting <contact@nannysitting.be>`,
+          to: [email],
           subject: 'Votre demande a bien été reçue - NannySitting',
           html: createConfirmationEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
         });
-
-        await clientSmtpClient.close();
         console.log('Client confirmation sent');
       } catch (emailError: any) {
         console.error('Error sending emails in background:', emailError);
