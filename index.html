@@ -23,6 +23,17 @@
     
     <!-- reCAPTCHA v3 -->
     <script src="https://www.google.com/recaptcha/api.js?render=6LengRksAAAAAKTFrWOOIL3wd1tH71fCUTcM042l"></script>
+    
+    <style>
+      /* Force hide reCAPTCHA badge */
+      .grecaptcha-badge { 
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        bottom: -200px !important;
+      }
+    </style>
   </head>
 
   <body>
