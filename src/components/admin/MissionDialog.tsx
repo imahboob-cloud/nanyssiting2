@@ -46,6 +46,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   const [heureDebut, setHeureDebut] = useState('09:00');
   const [heureFin, setHeureFin] = useState('18:00');
   const [duplicateDates, setDuplicateDates] = useState<Date[]>([]);
+  const [dateTimeMap, setDateTimeMap] = useState<Map<string, { heureDebut: string; heureFin: string }>>(new Map());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -254,12 +255,25 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
         if (error) throw error;
         toast({ title: 'Mission mise à jour avec succès' });
       } else {
-        // Créer toutes les missions (principale + dupliquées)
+        // Créer toutes les missions (principale + dupliquées) avec horaires personnalisés
         const allDates = [date, ...duplicateDates];
-        const missions = allDates.map(missionDate => ({
-          ...missionData,
-          date: format(missionDate, 'yyyy-MM-dd'),
-        }));
+        const missions = allDates.map(missionDate => {
+          const dateKey = format(missionDate, 'yyyy-MM-dd');
+          const customTimes = dateTimeMap.get(dateKey);
+          
+          return {
+            ...missionData,
+            date: dateKey,
+            heure_debut: customTimes?.heureDebut || missionData.heure_debut,
+            heure_fin: customTimes?.heureFin || missionData.heure_fin,
+            montant: customTimes ? (() => {
+              const hours = calculateHours(customTimes.heureDebut, customTimes.heureFin);
+              const tarif = getAppropriateTarif(missionDate);
+              const prixHoraire = tarif ? parseFloat(tarif.tarif_horaire) : 0;
+              return prixHoraire * hours;
+            })() : missionData.montant,
+          };
+        });
 
         const { error } = await supabase
           .from('missions')
@@ -271,6 +285,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
 
       reset();
       setDuplicateDates([]);
+      setDateTimeMap(new Map());
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -380,9 +395,73 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
                 </PopoverContent>
               </Popover>
               {duplicateDates.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  {duplicateDates.length} mission(s) supplémentaire(s) seront créées
-                </p>
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Horaires personnalisés pour chaque date :
+                  </p>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {duplicateDates.map((dupDate) => {
+                      const dateKey = format(dupDate, 'yyyy-MM-dd');
+                      const customTime = dateTimeMap.get(dateKey) || { heureDebut, heureFin };
+                      
+                      return (
+                        <div key={dateKey} className="p-3 border rounded-lg space-y-2 bg-muted/30">
+                          <div className="font-medium text-sm">
+                            {format(dupDate, "EEEE dd MMMM yyyy", { locale: fr })}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Début</Label>
+                              <Select 
+                                value={customTime.heureDebut} 
+                                onValueChange={(value) => {
+                                  const newMap = new Map(dateTimeMap);
+                                  newMap.set(dateKey, { ...customTime, heureDebut: value });
+                                  setDateTimeMap(newMap);
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 48 }, (_, i) => {
+                                    const hour = Math.floor(i / 2);
+                                    const minute = i % 2 === 0 ? '00' : '30';
+                                    const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                                    return <SelectItem key={time} value={time}>{time}</SelectItem>;
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Fin</Label>
+                              <Select 
+                                value={customTime.heureFin} 
+                                onValueChange={(value) => {
+                                  const newMap = new Map(dateTimeMap);
+                                  newMap.set(dateKey, { ...customTime, heureFin: value });
+                                  setDateTimeMap(newMap);
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 48 }, (_, i) => {
+                                    const hour = Math.floor(i / 2);
+                                    const minute = i % 2 === 0 ? '00' : '30';
+                                    const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                                    return <SelectItem key={time} value={time}>{time}</SelectItem>;
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
           )}
