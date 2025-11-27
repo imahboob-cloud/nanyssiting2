@@ -164,4 +164,32 @@ All colors MUST be HSL.
     opacity: 0 !important;
     display: none !important;
   }
+  
+  /* Custom Scrollbar - NannySitting Brand */
+  /* For Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 8px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--salmon));
+    border-radius: 8px;
+    border: 2px solid hsl(var(--muted));
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--sage));
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--salmon)) hsl(var(--muted));
+  }
 }
