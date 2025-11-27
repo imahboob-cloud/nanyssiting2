@@ -6,12 +6,13 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, FileText, Euro, TrendingUp, CalendarDays, ArrowLeft, Download, Receipt } from 'lucide-react';
+import { Loader2, Calendar, Clock, FileText, Euro, TrendingUp, CalendarDays, ArrowLeft, Download, Receipt, Send } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 import type { DateRange } from 'react-day-picker';
 import { InvoiceDialog } from './InvoiceDialog';
+import { SendInvoiceDialog } from './SendInvoiceDialog';
 import { cn } from '@/lib/utils';
 
 type Client = Tables<'clients'>;
@@ -49,6 +50,8 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+  const [sendInvoiceDialogOpen, setSendInvoiceDialogOpen] = useState(false);
+  const [invoiceToSend, setInvoiceToSend] = useState<Invoice | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -525,21 +528,37 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
                           </p>
                         </div>
                         
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadInvoice(invoice.id, invoice.numero)}
-                          disabled={downloadingPdf === invoice.id}
-                        >
-                          {downloadingPdf === invoice.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Download className="h-4 w-4 mr-2" />
-                              Télécharger
-                            </>
+                        <div className="flex gap-2">
+                          {invoice.statut === 'brouillon' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setInvoiceToSend(invoice);
+                                setSendInvoiceDialogOpen(true);
+                              }}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Envoyer
+                            </Button>
                           )}
-                        </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(invoice.id, invoice.numero)}
+                            disabled={downloadingPdf === invoice.id}
+                          >
+                            {downloadingPdf === invoice.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4 mr-2" />
+                                Télécharger
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -561,6 +580,16 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
             title: 'Succès',
             description: 'Facture générée avec succès',
           });
+        }}
+      />
+
+      <SendInvoiceDialog
+        open={sendInvoiceDialogOpen}
+        onOpenChange={setSendInvoiceDialogOpen}
+        invoice={invoiceToSend}
+        client={client}
+        onSuccess={() => {
+          loadInvoices(); // Recharger les factures après envoi
         }}
       />
     </div>

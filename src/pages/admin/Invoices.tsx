@@ -301,6 +301,7 @@ const Invoices = () => {
         open={sendDialogOpen}
         onOpenChange={setSendDialogOpen}
         invoice={invoiceToSend}
+        client={invoiceToSend?.clients || null}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["invoices"] });
         }}
