@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { NannySitterDialog } from '@/components/admin/NannySitterDialog';
-import { NannySitterMissionsDialog } from '@/components/admin/NannySitterMissionsDialog';
+import { NannySitterMissionsView } from '@/components/admin/NannySitterMissionsView';
 import { Loader2, Plus, Search, Pencil, Trash2, Baby, FileText } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -48,8 +48,7 @@ const NannySitters = () => {
   const [selectedNannySitter, setSelectedNannySitter] = useState<NannySitter | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [nannysitterToDelete, setNannySitterToDelete] = useState<NannySitter | null>(null);
-  const [missionsDialogOpen, setMissionsDialogOpen] = useState(false);
-  const [nannysitterForMissions, setNannysitterForMissions] = useState<NannySitter | null>(null);
+  const [selectedNannysitterForMissions, setSelectedNannysitterForMissions] = useState<NannySitter | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -202,6 +201,16 @@ const NannySitters = () => {
     );
   }
 
+  // Show missions view if a nannysitter is selected
+  if (selectedNannysitterForMissions) {
+    return (
+      <NannySitterMissionsView
+        nannysitter={selectedNannysitterForMissions}
+        onBack={() => setSelectedNannysitterForMissions(null)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -289,8 +298,7 @@ const NannySitters = () => {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => {
-                          setNannysitterForMissions(nannysitter);
-                          setMissionsDialogOpen(true);
+                          setSelectedNannysitterForMissions(nannysitter);
                         }}
                         title="Voir les missions"
                       >
@@ -324,12 +332,6 @@ const NannySitters = () => {
         nannysitter={selectedNannySitter}
         onSave={handleSave}
         loading={saving}
-      />
-
-      <NannySitterMissionsDialog
-        open={missionsDialogOpen}
-        onOpenChange={setMissionsDialogOpen}
-        nannysitter={nannysitterForMissions}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
