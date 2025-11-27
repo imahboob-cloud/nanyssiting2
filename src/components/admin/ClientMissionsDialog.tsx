@@ -106,6 +106,13 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
     return Math.ceil(value * 2) / 2;
   };
 
+  // Get description based on day of week
+  const getDescription = (date: string): string => {
+    const dayOfWeek = new Date(date).getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+    return isWeekend ? 'Babysitting en week-end' : 'Babysitting en semaine';
+  };
+
   const handleGenerateInvoice = () => {
     if (!client || missions.length === 0) return;
 
@@ -121,7 +128,7 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
         date: mission.date,
         heure_debut: heureDebut,
         heure_fin: heureFin,
-        description: mission.description || 'Garde d\'enfants',
+        description: getDescription(mission.date),
         prix_horaire: roundedPricePerHour,
         total: roundedPricePerHour * hours,
       };
