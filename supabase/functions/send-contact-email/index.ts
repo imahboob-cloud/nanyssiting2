@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Declare EdgeRuntime for background tasks
 declare const EdgeRuntime: {
@@ -21,15 +22,87 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validation schema avec Zod - SÉCURITÉ STRICTE
+const contactFormSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut pas dépasser 100 caractères"),
+  email: z.string().trim().email("Email invalide").max(255, "L'email ne peut pas dépasser 255 caractères"),
+  phone: z.string().trim().max(20, "Le téléphone ne peut pas dépasser 20 caractères").optional(),
+  address: z.string().trim().max(200, "L'adresse ne peut pas dépasser 200 caractères").optional(),
+  postalCode: z.string().trim().max(10, "Le code postal ne peut pas dépasser 10 caractères").optional(),
+  city: z.string().trim().max(100, "La ville ne peut pas dépasser 100 caractères").optional(),
+  service: z.string().trim().min(1, "Le service est requis").max(100, "Le service ne peut pas dépasser 100 caractères"),
+  message: z.string().trim().max(2000, "Le message ne peut pas dépasser 2000 caractères").optional(),
+  honeypot: z.string().max(0, "Spam détecté").optional(), // Honeypot anti-bot
+});
+
 interface ContactFormRequest {
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   address?: string;
   postalCode?: string;
   city?: string;
   service: string;
-  message: string;
+  message?: string;
+  honeypot?: string;
+}
+
+// Rate limiting storage (en mémoire, réinitialise à chaque redémarrage)
+const rateLimitStore = new Map<string, { count: number; firstRequest: number }>();
+
+// Configuration du rate limiting
+const RATE_LIMIT = {
+  MAX_REQUESTS: 3, // Maximum 3 requêtes
+  WINDOW_MS: 60 * 60 * 1000, // Par heure (60 minutes)
+  BLOCK_DURATION_MS: 24 * 60 * 60 * 1000, // Bloquer pendant 24h si dépassé
+};
+
+function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+
+  if (!record) {
+    rateLimitStore.set(ip, { count: 1, firstRequest: now });
+    return { allowed: true };
+  }
+
+  const timeSinceFirst = now - record.firstRequest;
+
+  // Si la fenêtre a expiré, réinitialiser
+  if (timeSinceFirst > RATE_LIMIT.WINDOW_MS) {
+    rateLimitStore.set(ip, { count: 1, firstRequest: now });
+    return { allowed: true };
+  }
+
+  // Si dépassement du rate limit
+  if (record.count >= RATE_LIMIT.MAX_REQUESTS) {
+    const blockUntil = record.firstRequest + RATE_LIMIT.BLOCK_DURATION_MS;
+    if (now < blockUntil) {
+      const minutesLeft = Math.ceil((blockUntil - now) / (60 * 1000));
+      return { 
+        allowed: false, 
+        reason: `Trop de requêtes. Réessayez dans ${minutesLeft} minutes.` 
+      };
+    } else {
+      // Le blocage a expiré, réinitialiser
+      rateLimitStore.set(ip, { count: 1, firstRequest: now });
+      return { allowed: true };
+    }
+  }
+
+  // Incrémenter le compteur
+  record.count++;
+  rateLimitStore.set(ip, record);
+  return { allowed: true };
+}
+
+function sanitizeHtml(text: string): string {
+  return text
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
 }
 
 const createConfirmationEmailHTML = (data: ContactFormRequest) => {
@@ -105,7 +178,7 @@ a { text-decoration: none; }
 </td>
 <td class="col-mobile" width="50%" style="vertical-align: top;">
 <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0 !important; text-transform: uppercase; font-weight: bold;">Téléphone</p>
-<p style="margin: 0; font-size: 15px; color: #2D3748 !important;">${data.phone}</p>
+<p style="margin: 0; font-size: 15px; color: #2D3748 !important;">${data.phone || 'Non renseigné'}</p>
 </td>
 </tr>
 </table>
@@ -235,7 +308,7 @@ a { text-decoration: none; }
 </td>
 <td class="col-mobile" width="50%" style="vertical-align: top;">
 <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0 !important; text-transform: uppercase; font-weight: bold;">Téléphone</p>
-<p style="margin: 0; font-size: 15px; color: #2D3748 !important;"><a href="tel:${data.phone}" style="color: #2D3748 !important; text-decoration: underline;">${data.phone}</a></p>
+<p style="margin: 0; font-size: 15px; color: #2D3748 !important;"><a href="tel:${data.phone}" style="color: #2D3748 !important; text-decoration: underline;">${data.phone || 'Non renseigné'}</a></p>
 </td>
 </tr>
 </table>
@@ -289,40 +362,135 @@ ${data.address || data.city ? `<tr>
 };
 
 serve(async (req) => {
+  const startTime = Date.now();
+  
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Récupérer l'IP du client
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 
+                   req.headers.get('x-real-ip') || 
+                   'unknown';
+
+  console.log('📥 Nouvelle requête de contact:', {
+    ip: clientIp,
+    timestamp: new Date().toISOString(),
+    userAgent: req.headers.get('user-agent')?.substring(0, 100),
+  });
+
   try {
-    const { name, email, phone, address, postalCode, city, service, message }: ContactFormRequest = await req.json();
-    console.log('Processing contact form submission:', { name, email, service });
-
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    // Save prospect to database (FAST - only this is awaited)
-    const { error: dbError } = await supabaseAdmin
-      .from('clients')
-      .insert({
-        prenom: firstName,
-        nom: lastName,
-        email,
-        telephone: phone,
-        adresse: address || null,
-        code_postal: postalCode || null,
-        ville: city || null,
-        service_souhaite: service,
-        message,
-        statut: 'prospect'
+    // 1. RATE LIMITING - Vérifier avant toute autre opération
+    const rateLimitCheck = checkRateLimit(clientIp);
+    if (!rateLimitCheck.allowed) {
+      console.warn('🚫 RATE LIMIT EXCEEDED:', {
+        ip: clientIp,
+        reason: rateLimitCheck.reason,
+        timestamp: new Date().toISOString(),
       });
-
-    if (dbError) {
-      console.error('Error saving prospect to database:', dbError);
-      throw new Error('Erreur lors de l\'enregistrement');
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Trop de tentatives. Veuillez réessayer plus tard.',
+          details: rateLimitCheck.reason 
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    console.log('Prospect saved successfully');
+    // 2. VALIDATION DES DONNÉES avec Zod
+    const rawData = await req.json();
+    
+    // Vérifier le honeypot (champ caché anti-spam)
+    if (rawData.honeypot && rawData.honeypot.length > 0) {
+      console.warn('🍯 HONEYPOT TRIGGERED - Spam bot détecté:', {
+        ip: clientIp,
+        honeypot: rawData.honeypot,
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Retourner un succès pour tromper le bot
+      return new Response(
+        JSON.stringify({ success: true, message: 'Demande envoyée avec succès' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const validationResult = contactFormSchema.safeParse(rawData);
+    
+    if (!validationResult.success) {
+      console.warn('❌ VALIDATION FAILED:', {
+        ip: clientIp,
+        errors: validationResult.error.errors,
+        timestamp: new Date().toISOString(),
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Données invalides', 
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const {
+      name,
+      email,
+      phone = '',
+      address = '',
+      postalCode = '',
+      city = '',
+      service,
+      message = '',
+    } = validationResult.data;
+
+    // 3. SANITIZATION - Nettoyer les données avant insertion
+    const sanitizedData = {
+      nom: sanitizeHtml(name.split(' ').pop() || name),
+      prenom: sanitizeHtml(name.split(' ')[0] || ''),
+      email: email.toLowerCase().trim(),
+      telephone: phone ? sanitizeHtml(phone) : null,
+      adresse: address ? sanitizeHtml(address) : null,
+      code_postal: postalCode ? sanitizeHtml(postalCode) : null,
+      ville: city ? sanitizeHtml(city) : null,
+      service_souhaite: sanitizeHtml(service),
+      message: message ? sanitizeHtml(message) : null,
+      statut: 'prospect' as const
+    };
+
+    console.log('✅ Données validées et nettoyées:', {
+      ip: clientIp,
+      email: sanitizedData.email,
+      service: sanitizedData.service_souhaite,
+    });
+
+    // 4. INSERT dans Supabase
+    const { data: clientData, error: clientError } = await supabaseAdmin
+      .from('clients')
+      .insert(sanitizedData)
+      .select()
+      .single();
+
+    if (clientError) {
+      console.error('❌ ERREUR DATABASE:', {
+        ip: clientIp,
+        error: clientError,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error(`Database error: ${clientError.message}`);
+    }
+
+    console.log('✅ Client inséré avec succès:', {
+      clientId: clientData.id,
+      ip: clientIp,
+      email: sanitizedData.email,
+      processingTime: Date.now() - startTime,
+    });
 
     // Send emails in BACKGROUND (non-blocking)
     const sendEmails = async () => {
@@ -395,30 +563,35 @@ serve(async (req) => {
       }
     };
 
-    // Use EdgeRuntime.waitUntil for background task
-    if (typeof EdgeRuntime !== 'undefined') {
+    // Run email sending in background (non-blocking)
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
       EdgeRuntime.waitUntil(sendEmails());
     } else {
-      // Fallback if EdgeRuntime not available
       sendEmails().catch(console.error);
     }
 
-    // Return IMMEDIATELY after DB insert
+    console.log('✅ REQUÊTE COMPLÉTÉE:', {
+      clientId: clientData.id,
+      ip: clientIp,
+      totalTime: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+
     return new Response(
-      JSON.stringify({ success: true }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ success: true, message: 'Demande envoyée avec succès' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Error in send-contact-email function:', error);
+    console.error('❌ ERREUR CRITIQUE:', {
+      ip: clientIp,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: 'Une erreur est survenue. Veuillez réessayer.' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
