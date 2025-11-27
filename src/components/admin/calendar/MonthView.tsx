@@ -9,9 +9,10 @@ interface MonthViewProps {
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   getStatusColor: (status: string, colorIndex: number) => string;
+  calculateMissionAmount: (mission: any) => number;
 }
 
-export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor }: MonthViewProps) {
+export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor, calculateMissionAmount }: MonthViewProps) {
   const days = eachDayOfInterval({
     start: startOfMonth(currentDate),
     end: endOfMonth(currentDate),

@@ -79,6 +79,7 @@ const statusLabels = {
 
 const Calendar = () => {
   const [missions, setMissions] = useState<any[]>([]);
+  const [tarifs, setTarifs] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -89,8 +90,63 @@ const Calendar = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    loadTarifs();
+  }, []);
+
+  useEffect(() => {
     loadMissions();
   }, [currentDate, view]);
+
+  const loadTarifs = async () => {
+    const { data } = await supabase
+      .from('tarifs')
+      .select('*')
+      .eq('actif', true);
+    
+    setTarifs(data || []);
+  };
+
+  // Normalize time format from "HH:MM:SS" to "HH:MM"
+  const normalizeTime = (time: string): string => {
+    return time.substring(0, 5);
+  };
+
+  // Calculate hours between two times
+  const calculateHours = (heureDebut: string, heureFin: string): number => {
+    const [startHour, startMin] = heureDebut.split(':').map(Number);
+    const [endHour, endMin] = heureFin.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    return (endMinutes - startMinutes) / 60;
+  };
+
+  // Get appropriate tarif based on day of week
+  const getAppropriateTarif = (date: string) => {
+    const dayOfWeek = new Date(date).getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    const appropriateTarifs = tarifs.filter(t => 
+      t.type_jour === 'tous' || 
+      (isWeekend && t.type_jour === 'weekend') || 
+      (!isWeekend && t.type_jour === 'semaine')
+    );
+    
+    const specificTarif = appropriateTarifs.find(t => 
+      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
+    );
+    
+    return specificTarif || appropriateTarifs[0];
+  };
+
+  // Calculate mission amount based on tarifs
+  const calculateMissionAmount = (mission: any): number => {
+    const heureDebut = normalizeTime(mission.heure_debut);
+    const heureFin = normalizeTime(mission.heure_fin);
+    const hours = calculateHours(heureDebut, heureFin);
+    const tarif = getAppropriateTarif(mission.date);
+    const prixHoraire = tarif ? parseFloat(tarif.tarif_horaire) : 0;
+    return prixHoraire * hours;
+  };
 
   const loadMissions = async () => {
     let start: Date;
@@ -298,6 +354,7 @@ const Calendar = () => {
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
             getStatusColor={getStatusColor}
+            calculateMissionAmount={calculateMissionAmount}
           />
         )}
 
@@ -309,6 +366,7 @@ const Calendar = () => {
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
             getStatusColor={getStatusColor}
+            calculateMissionAmount={calculateMissionAmount}
           />
         )}
 
@@ -320,6 +378,7 @@ const Calendar = () => {
             onMissionClick={handleMissionClick}
             onDeleteMission={handleDeleteMission}
             getStatusColor={getStatusColor}
+            calculateMissionAmount={calculateMissionAmount}
           />
         )}
       </Card>

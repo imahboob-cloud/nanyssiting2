@@ -9,9 +9,10 @@ interface WeekViewProps {
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   getStatusColor: (status: string, colorIndex: number) => string;
+  calculateMissionAmount: (mission: any) => number;
 }
 
-export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor }: WeekViewProps) {
+export function WeekView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor, calculateMissionAmount }: WeekViewProps) {
   const weekStart = startOfWeek(currentDate, { locale: fr });
   const weekEnd = endOfWeek(currentDate, { locale: fr });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
