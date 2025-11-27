@@ -3,13 +3,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, FileText, Euro, TrendingUp } from 'lucide-react';
+import { Loader2, Calendar, Clock, FileText, Euro, TrendingUp, CalendarDays } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
+import type { DateRange } from 'react-day-picker';
 import { InvoiceDialog } from './InvoiceDialog';
+import { cn } from '@/lib/utils';
 
 type Client = Tables<'clients'>;
 type Mission = Tables<'missions'> & {
@@ -37,24 +41,29 @@ interface ClientMissionsDialogProps {
 export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissionsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  }));
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (client && open) {
+    if (client && open && dateRange?.from && dateRange?.to) {
       loadMissions();
     }
-  }, [client, selectedMonth, open]);
+  }, [client, dateRange, open]);
 
   const loadMissions = async () => {
-    if (!client) return;
+    if (!client || !dateRange?.from || !dateRange?.to) return;
 
     setLoading(true);
     try {
-      const start = format(startOfMonth(selectedMonth), 'yyyy-MM-dd');
-      const end = format(endOfMonth(selectedMonth), 'yyyy-MM-dd');
+      const start = format(dateRange.from, 'yyyy-MM-dd');
+      const end = format(dateRange.to, 'yyyy-MM-dd');
+
+      console.log('Fetching missions for client:', client.id, 'from', start, 'to', end);
 
       const { data, error } = await supabase
         .from('missions')
@@ -65,10 +74,11 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
         .eq('client_id', client.id)
         .gte('date', start)
         .lte('date', end)
-        .eq('statut', 'termine')
         .order('date', { ascending: true });
 
       if (error) throw error;
+      
+      console.log('Missions fetched:', data?.length || 0);
       setMissions(data || []);
     } catch (error) {
       console.error('Error loading missions:', error);
@@ -99,11 +109,15 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
       total: mission.montant || 0,
     }));
 
+    const dateRangeText = dateRange?.from && dateRange?.to
+      ? `du ${format(dateRange.from, 'dd/MM/yyyy')} au ${format(dateRange.to, 'dd/MM/yyyy')}`
+      : '';
+
     setInvoiceData({
       client_id: client.id,
       lignes,
       tva: 0,
-      notes: `Facture pour les prestations du ${format(startOfMonth(selectedMonth), 'MMMM yyyy', { locale: fr })}`,
+      notes: `Facture pour les prestations ${dateRangeText}`,
       quote_id: null,
     });
 
@@ -187,36 +201,47 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
               </CardContent>
             </Card>
 
-            {/* Month Selector */}
-            <div className="flex items-center justify-between">
+            {/* Date Range Selector */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <CalendarDays className="h-5 w-5 text-primary" />
                 <span className="font-semibold">
-                  {format(selectedMonth, 'MMMM yyyy', { locale: fr })}
+                  {dateRange?.from && dateRange?.to
+                    ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
+                    : 'Sélectionner une période'}
                 </span>
               </div>
+              
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))}
-                >
-                  Mois précédent
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedMonth(new Date())}
+                  onClick={() => setDateRange({
+                    from: startOfMonth(new Date()),
+                    to: endOfMonth(new Date())
+                  })}
                 >
                   Mois actuel
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))}
-                >
-                  Mois suivant
-                </Button>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Choisir les dates
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <CalendarComponent
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      locale={fr}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
@@ -261,17 +286,23 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
               </Card>
             </div>
 
+            {/* Generate Invoice Button */}
+            {missions.length > 0 && (
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handleGenerateInvoice} 
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
+                >
+                  <Euro className="h-5 w-5" />
+                  Générer une facture ({calculateTotal().toFixed(2)} €)
+                </Button>
+              </div>
+            )}
+
             {/* Missions List */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Détail des missions</h3>
-                {missions.length > 0 && (
-                  <Button onClick={handleGenerateInvoice} className="gap-2">
-                    <Euro className="h-4 w-4" />
-                    Générer une facture
-                  </Button>
-                )}
-              </div>
+              <h3 className="text-lg font-semibold">Détail des missions ({missions.length})</h3>
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -281,7 +312,8 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
                 <Card className="border-dashed">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucune mission terminée pour ce mois</p>
+                    <p>Aucune mission pour cette période</p>
+                    <p className="text-sm mt-2">Essayez de sélectionner une autre plage de dates</p>
                   </CardContent>
                 </Card>
               ) : (
