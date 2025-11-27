@@ -96,18 +96,36 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
     return missions.reduce((sum, mission) => sum + (mission.montant || 0), 0);
   };
 
+  // Normalize time format from "HH:MM:SS" to "HH:MM"
+  const normalizeTime = (time: string): string => {
+    return time.substring(0, 5);
+  };
+
+  // Round up to nearest half hour
+  const roundUpToNearestHalf = (value: number): number => {
+    return Math.ceil(value * 2) / 2;
+  };
+
   const handleGenerateInvoice = () => {
     if (!client || missions.length === 0) return;
 
     // Convert missions to invoice lines
-    const lignes: InvoiceLine[] = missions.map(mission => ({
-      date: mission.date,
-      heure_debut: mission.heure_debut,
-      heure_fin: mission.heure_fin,
-      description: mission.description || 'Garde d\'enfants',
-      prix_horaire: mission.montant ? mission.montant / calculateHours(mission.heure_debut, mission.heure_fin) : 0,
-      total: mission.montant || 0,
-    }));
+    const lignes: InvoiceLine[] = missions.map(mission => {
+      const heureDebut = normalizeTime(mission.heure_debut);
+      const heureFin = normalizeTime(mission.heure_fin);
+      const hours = calculateHours(heureDebut, heureFin);
+      const rawPricePerHour = mission.montant ? mission.montant / hours : 0;
+      const roundedPricePerHour = roundUpToNearestHalf(rawPricePerHour);
+
+      return {
+        date: mission.date,
+        heure_debut: heureDebut,
+        heure_fin: heureFin,
+        description: mission.description || 'Garde d\'enfants',
+        prix_horaire: roundedPricePerHour,
+        total: roundedPricePerHour * hours,
+      };
+    });
 
     const dateRangeText = dateRange?.from && dateRange?.to
       ? `du ${format(dateRange.from, 'dd/MM/yyyy')} au ${format(dateRange.to, 'dd/MM/yyyy')}`
@@ -327,8 +345,8 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
                               <span className="font-semibold">
                                 {format(new Date(mission.date), 'EEEE dd MMMM yyyy', { locale: fr })}
                               </span>
-                              <Badge variant="outline">
-                                {mission.heure_debut} - {mission.heure_fin}
+                              <Badge variant="outline" className="font-mono">
+                                {normalizeTime(mission.heure_debut)} - {normalizeTime(mission.heure_fin)}
                               </Badge>
                               {getMissionStatusBadge(mission.statut || 'planifie')}
                             </div>
@@ -346,7 +364,7 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
                           
                           <div className="text-right">
                             <p className="text-xs text-muted-foreground">
-                              {calculateHours(mission.heure_debut, mission.heure_fin).toFixed(1)}h
+                              {calculateHours(normalizeTime(mission.heure_debut), normalizeTime(mission.heure_fin)).toFixed(1)}h
                             </p>
                             <p className="text-lg font-bold text-primary">
                               {mission.montant?.toFixed(2)} €
