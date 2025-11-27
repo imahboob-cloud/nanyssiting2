@@ -1,4 +1,4 @@
-import { format, eachDayOfInterval, startOfMonth, endOfMonth, isSameMonth, isSameDay, parseISO } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, isSameMonth, isSameDay, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Trash2 } from 'lucide-react';
 
@@ -14,8 +14,8 @@ interface MonthViewProps {
 
 export function MonthView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor, calculateMissionAmount }: MonthViewProps) {
   const days = eachDayOfInterval({
-    start: startOfMonth(currentDate),
-    end: endOfMonth(currentDate),
+    start: startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1, locale: fr }),
+    end: endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1, locale: fr }),
   });
 
   const getMissionsForDay = (day: Date) => {
