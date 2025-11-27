@@ -132,7 +132,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
     const originalNannysitterId = mission.nannysitter_id || '';
     
     // Only update if the value has actually changed
-    if (currentNannysitterId !== originalNannysitterId) {
+    if (currentNannysitterId !== originalNannysitterId && currentNannysitterId !== undefined) {
       const autoSave = async () => {
         try {
           const { error } = await supabase
@@ -143,19 +143,6 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
           if (error) throw error;
           
           toast({ title: 'NannySitter mise à jour automatiquement' });
-          
-          // Recharger les données de la mission mise à jour
-          const { data: updatedMission } = await supabase
-            .from('missions')
-            .select('*, clients(prenom, nom), nannysitters(prenom, nom)')
-            .eq('id', mission.id)
-            .single();
-          
-          if (updatedMission) {
-            // Mettre à jour l'objet mission local pour l'affichage
-            Object.assign(mission, updatedMission);
-          }
-          
           onSuccess();
         } catch (error: any) {
           toast({
@@ -166,9 +153,14 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
         }
       };
       
-      autoSave();
+      // Debounce the auto-save to avoid loop
+      const timer = setTimeout(() => {
+        autoSave();
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
-  }, [watch('nannysitter_id'), mission, onSuccess, toast]);
+  }, [watch('nannysitter_id')]);
 
   // Recalculate amount when date or hours change
   useEffect(() => {
