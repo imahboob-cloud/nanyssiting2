@@ -1,8 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') as string;
+const GMAIL_USER = Deno.env.get('GMAIL_USER') as string;
+const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') as string;
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -431,32 +434,37 @@ serve(async (req) => {
 
     console.log('Company notification email sent successfully:', resendData);
 
-    // Send confirmation email to client
-    const confirmationResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'NannySitting <onboarding@resend.dev>',
-        to: [email],
+    // Send confirmation email to client using Gmail
+    try {
+      const smtpClient = new SMTPClient({
+        connection: {
+          hostname: "smtp.gmail.com",
+          port: 465,
+          tls: true,
+          auth: {
+            username: GMAIL_USER,
+            password: GMAIL_APP_PASSWORD,
+          },
+        },
+      });
+
+      await smtpClient.send({
+        from: GMAIL_USER,
+        to: email,
         subject: 'Votre demande a bien été reçue - NannySitting',
         html: createConfirmationEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
-      }),
-    });
+      });
 
-    const confirmationData = await confirmationResponse.json();
-
-    if (!confirmationResponse.ok) {
-      console.error('Error from Resend (client confirmation):', confirmationData);
+      await smtpClient.close();
+      
+      console.log('Client confirmation email sent successfully via Gmail');
+    } catch (emailError: any) {
+      console.error('Error sending confirmation email via Gmail:', emailError);
       // Continue even if confirmation email fails
-    } else {
-      console.log('Client confirmation email sent successfully:', confirmationData);
     }
 
     return new Response(
-      JSON.stringify({ success: true, companyEmail: resendData, confirmationEmail: confirmationData }),
+      JSON.stringify({ success: true, companyEmail: resendData }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
