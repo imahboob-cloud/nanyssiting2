@@ -119,12 +119,20 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Feedback instantané optimiste (200ms = ressenti quasi-instantané)
-    const optimisticTimeout = setTimeout(() => {
-      setIsPopupOpen(true);
-    }, 200);
+    let optimisticTimeout: NodeJS.Timeout | undefined;
 
     try {
+      // Générer le token reCAPTCHA v3 invisible
+      const recaptchaToken = await (window as any).grecaptcha.execute(
+        '6LengRksAAAAAKTFrWOOIL3wd1tH71fCUTcM042l',
+        { action: 'submit_contact' }
+      );
+
+      // Feedback instantané optimiste (200ms = ressenti quasi-instantané)
+      optimisticTimeout = setTimeout(() => {
+        setIsPopupOpen(true);
+      }, 200);
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
         method: 'POST',
         headers: {
@@ -140,14 +148,17 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
           city: formData.city,
           service: formData.service,
           message: formData.message,
-          honeypot: formData.honeypot // Champ anti-spam
+          honeypot: formData.honeypot,
+          recaptchaToken // Token reCAPTCHA v3
         })
       });
 
-      clearTimeout(optimisticTimeout);
+      if (optimisticTimeout) clearTimeout(optimisticTimeout);
+
       
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'envoi du formulaire');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'envoi du formulaire');
       }
 
       setIsPopupOpen(true);
@@ -164,7 +175,7 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         honeypot: ''
       });
     } catch (error) {
-      clearTimeout(optimisticTimeout);
+      if (optimisticTimeout) clearTimeout(optimisticTimeout);
       console.error('Error submitting form:', error);
       setIsPopupOpen(false);
       alert('Une erreur est survenue. Veuillez réessayer.');
