@@ -41,6 +41,7 @@ interface ClientMissionsDialogProps {
 export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissionsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [tarifs, setTarifs] = useState<any[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date())
@@ -50,10 +51,28 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
   const { toast } = useToast();
 
   useEffect(() => {
+    loadTarifs();
+  }, []);
+
+  useEffect(() => {
     if (client && open && dateRange?.from && dateRange?.to) {
       loadMissions();
     }
   }, [client, dateRange, open]);
+
+  const loadTarifs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tarifs')
+        .select('*')
+        .eq('actif', true);
+
+      if (error) throw error;
+      setTarifs(data || []);
+    } catch (error) {
+      console.error('Error loading tarifs:', error);
+    }
+  };
 
   const loadMissions = async () => {
     if (!client || !dateRange?.from || !dateRange?.to) return;
@@ -113,6 +132,26 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
     return isWeekend ? 'Babysitting en week-end' : 'Babysitting en semaine';
   };
 
+  // Get appropriate tarif based on day of week
+  const getAppropriateTarif = (date: string) => {
+    const dayOfWeek = new Date(date).getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    // Filter tarifs based on day type
+    const appropriateTarifs = tarifs.filter(t => 
+      t.type_jour === 'tous' || 
+      (isWeekend && t.type_jour === 'weekend') || 
+      (!isWeekend && t.type_jour === 'semaine')
+    );
+    
+    // Prioritize specific day type over 'tous'
+    const specificTarif = appropriateTarifs.find(t => 
+      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
+    );
+    
+    return specificTarif || appropriateTarifs[0];
+  };
+
   const handleGenerateInvoice = () => {
     if (!client || missions.length === 0) return;
 
@@ -121,16 +160,18 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
       const heureDebut = normalizeTime(mission.heure_debut);
       const heureFin = normalizeTime(mission.heure_fin);
       const hours = calculateHours(heureDebut, heureFin);
-      const rawPricePerHour = mission.montant ? mission.montant / hours : 0;
-      const roundedPricePerHour = roundUpToNearestHalf(rawPricePerHour);
+      
+      // Get the appropriate tarif for this date
+      const tarif = getAppropriateTarif(mission.date);
+      const prixHoraire = tarif ? parseFloat(tarif.tarif_horaire) : 0;
 
       return {
         date: mission.date,
         heure_debut: heureDebut,
         heure_fin: heureFin,
         description: getDescription(mission.date),
-        prix_horaire: roundedPricePerHour,
-        total: roundedPricePerHour * hours,
+        prix_horaire: prixHoraire,
+        total: prixHoraire * hours,
       };
     });
 
