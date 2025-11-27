@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { MonthView } from '@/components/admin/calendar/MonthView';
 import { WeekView } from '@/components/admin/calendar/WeekView';
 import { DayView } from '@/components/admin/calendar/DayView';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
@@ -121,8 +121,9 @@ const Calendar = () => {
   };
 
   // Get appropriate tarif based on day of week
-  const getAppropriateTarif = (date: string) => {
-    const dayOfWeek = new Date(date).getDay();
+  const getAppropriateTarif = (dateString: string) => {
+    const date = parseISO(dateString);
+    const dayOfWeek = date.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     
     const appropriateTarifs = tarifs.filter(t => 
