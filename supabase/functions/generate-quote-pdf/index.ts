@@ -160,13 +160,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     // --- CLIENT CARD ---
     // Position dynamically based on company info height with safety margin
-    yPos = Math.max(currentY + 15, 95);
+    const clientCardY = Math.max(currentY + 15, 95);
+    yPos = clientCardY;
     
     // Background Card
     doc.setFillColor(COLORS.bgLight[0], COLORS.bgLight[1], COLORS.bgLight[2]);
     doc.setDrawColor(254, 215, 170); 
     doc.setLineWidth(0.5);
-    doc.roundedRect(margin, yPos, 90, 45, 3, 3, 'FD');
+    const clientCardHeight = 45;
+    doc.roundedRect(margin, yPos, 90, clientCardHeight, 3, 3, 'FD');
 
     // Label
     setFontBrand('bold', 8, COLORS.sage);
@@ -235,7 +237,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- TABLE ---
-    yPos = 145;
+    // Position table dynamically after client card with safety margin
+    yPos = clientCardY + clientCardHeight + 10;
 
     // Header Background
     doc.setFillColor(COLORS.sage[0], COLORS.sage[1], COLORS.sage[2]);
