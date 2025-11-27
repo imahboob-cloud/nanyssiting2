@@ -102,13 +102,15 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
       const todayDate = format(new Date(), 'yyyy-MM-dd');
       const appropriateTarif = getAppropriateTarif(todayDate);
       if (appropriateTarif) {
+        const hours = calculateHours('09:00', '17:00');
+        const prix = parseFloat(appropriateTarif.tarif_horaire);
         setLignes([{
           date: todayDate,
           heure_debut: '09:00',
           heure_fin: '17:00',
           description: appropriateTarif.nom,
-          prix_horaire: parseFloat(appropriateTarif.tarif_horaire),
-          total: 0
+          prix_horaire: prix,
+          total: hours * prix
         }]);
       }
     }
@@ -173,14 +175,16 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
     const lastLigne = lignes[lignes.length - 1];
     const newDate = lastLigne.date;
     const appropriateTarif = getAppropriateTarif(newDate);
+    const prix = appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0;
+    const hours = calculateHours(lastLigne.heure_debut, lastLigne.heure_fin);
     
     setLignes([...lignes, { 
       date: newDate, 
       heure_debut: lastLigne.heure_debut, 
       heure_fin: lastLigne.heure_fin, 
       description: appropriateTarif?.nom || '', 
-      prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
-      total: 0 
+      prix_horaire: prix, 
+      total: hours * prix 
     }]);
   };
 
@@ -272,13 +276,15 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
       reset();
       const todayDate = format(new Date(), 'yyyy-MM-dd');
       const appropriateTarif = getAppropriateTarif(todayDate);
+      const prix = appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0;
+      const hours = calculateHours('09:00', '17:00');
       setLignes([{ 
         date: todayDate, 
         heure_debut: '09:00', 
         heure_fin: '17:00', 
         description: appropriateTarif?.nom || '', 
-        prix_horaire: appropriateTarif ? parseFloat(appropriateTarif.tarif_horaire) : 0, 
-        total: 0 
+        prix_horaire: prix, 
+        total: hours * prix 
       }]);
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 30);
