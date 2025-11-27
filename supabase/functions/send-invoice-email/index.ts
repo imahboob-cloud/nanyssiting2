@@ -101,10 +101,10 @@ a { text-decoration: none; }
 :root { color-scheme: light only; supported-color-schemes: light; }
 </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FFF9F5 !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFF9F5" style="background-color: #FFF9F5 !important;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFFFFF" style="background-color: #FFFFFF !important;">
 <tr>
-<td align="center" style="padding: 40px 0;">
+<td align="center" style="padding: 40px 0; background-color: #FFFFFF !important;">
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" bgcolor="#FFFFFF" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 <tr>
 <td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff !important;">
@@ -121,9 +121,9 @@ a { text-decoration: none; }
 <td class="mobile-padding" style="padding: 40px 50px; background-color: #ffffff !important;">
 <h1 style="margin: 0 0 20px 0; font-family: 'Quicksand', sans-serif; font-size: 24px; color: #2D3748 !important; font-weight: 700; text-align: center;">Bonjour ${clientName},</h1>
 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #4A5568 !important; text-align: center; font-family: 'Quicksand', sans-serif;">J'espère que vous allez bien et que vos enfants se portent à merveille. ✨<br><br>Veuillez trouver ci-joint votre facture correspondant aux prestations de garde du mois écoulé.</p>
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFF5F0" style="background-color: #FFF5F0 !important; border-radius: 12px; margin: 30px 0;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFFFFF" style="background-color: #FFFFFF !important; border: 2px solid #F79B75; border-radius: 12px; margin: 30px 0;">
 <tr>
-<td style="padding: 25px; text-align: center; background-color: #FFF5F0 !important;">
+<td style="padding: 25px; text-align: center; background-color: #FFFFFF !important;">
 <p style="margin: 0 0 5px 0; color: #81B7A9 !important; font-size: 12px; font-weight: bold; text-transform: uppercase; font-family: 'Quicksand', sans-serif;">Facture N°</p>
 <p style="margin: 0 0 20px 0; color: #2D3748 !important; font-size: 16px; font-weight: bold; font-family: 'Quicksand', sans-serif;">${invoice.numero}</p>
 <p style="margin: 0 0 5px 0; color: #81B7A9 !important; font-size: 12px; font-weight: bold; text-transform: uppercase; font-family: 'Quicksand', sans-serif;">Montant à régler</p>

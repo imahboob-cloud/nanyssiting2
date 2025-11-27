@@ -58,10 +58,10 @@ a { text-decoration: none; }
 :root { color-scheme: light only; supported-color-schemes: light; }
 </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FFF9F5 !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFF9F5" style="background-color: #FFF9F5 !important;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFFFFF" style="background-color: #FFFFFF !important;">
 <tr>
-<td align="center" style="padding: 40px 0;">
+<td align="center" style="padding: 40px 0; background-color: #FFFFFF !important;">
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" bgcolor="#FFFFFF" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 <tr>
 <td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff !important;">
@@ -82,9 +82,9 @@ a { text-decoration: none; }
 <p style="margin: 0; color: #2D3748 !important; font-weight: 600; font-size: 14px; font-family: 'Quicksand', sans-serif;">📞 Nous prendrons contact avec vous <span style="color: #F79B75 !important; text-decoration: underline;">dans la journée</span> pour affiner vos besoins.</p>
 </div>
 <p style="font-size: 14px; color: #81B7A9 !important; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; text-align: center; font-family: 'Quicksand', sans-serif;">Récapitulatif de vos informations</p>
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC !important; border-radius: 12px; overflow: hidden;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF !important; border: 2px solid #E5E7EB; border-radius: 12px; overflow: hidden;">
 <tr>
-<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #FFFFFF !important;">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr>
 <td class="col-mobile" width="50%" style="vertical-align: top;">
@@ -96,7 +96,7 @@ a { text-decoration: none; }
 </td>
 </tr>
 <tr>
-<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #FFFFFF !important;">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr>
 <td class="col-mobile" width="50%" style="vertical-align: top; padding-right: 10px;">
@@ -112,14 +112,14 @@ a { text-decoration: none; }
 </td>
 </tr>
 ${data.address || data.city ? `<tr>
-<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #FFFFFF !important;">
 <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0 !important; text-transform: uppercase; font-weight: bold;">Lieu de prestation</p>
 <p style="margin: 0; font-size: 15px; color: #2D3748 !important;">${data.address || ''}</p>
 <p style="margin: 2px 0 0 0; font-size: 15px; color: #2D3748 !important;">${data.postalCode || ''} ${data.city || ''}</p>
 </td>
 </tr>` : ''}
 <tr>
-<td style="padding: 20px 25px; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; background-color: #FFFFFF !important;">
 <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0 !important; text-transform: uppercase; font-weight: bold;">Vos besoins / Détails</p>
 <p style="margin: 0; font-size: 14px; color: #4A5568 !important; line-height: 1.5; font-style: italic;">"${data.message || 'Non spécifié'}"</p>
 </td>
@@ -146,7 +146,7 @@ ${data.address || data.city ? `<tr>
 </table>
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container">
 <tr>
-<td align="center" style="padding-top: 20px; background-color: #FFF9F5 !important;">
+<td align="center" style="padding-top: 20px; background-color: #FFFFFF !important;">
 <p style="font-size: 10px; color: #A0AEC0 !important; font-family: 'Quicksand', sans-serif;">Ceci est une notification automatique suite à votre demande sur notre site.</p>
 </td>
 </tr>
@@ -184,10 +184,10 @@ a { text-decoration: none; }
 :root { color-scheme: light only; supported-color-schemes: light; }
 </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FFF9F5 !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFF9F5" style="background-color: #FFF9F5 !important;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFFFFF" style="background-color: #FFFFFF !important;">
 <tr>
-<td align="center" style="padding: 40px 0;">
+<td align="center" style="padding: 40px 0; background-color: #FFFFFF !important;">
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" bgcolor="#FFFFFF" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 <tr>
 <td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff !important;">
@@ -208,9 +208,9 @@ a { text-decoration: none; }
 <p style="margin: 0; color: #2D3748 !important; font-weight: 600; font-size: 14px; font-family: 'Quicksand', sans-serif;">📋 Service demandé : <span style="color: #F79B75 !important; font-weight: 700;">${data.service}</span></p>
 </div>
 <p style="font-size: 14px; color: #81B7A9 !important; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; text-align: center; font-family: 'Quicksand', sans-serif;">Informations du client</p>
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC !important; border-radius: 12px; overflow: hidden;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF !important; border: 2px solid #E5E7EB; border-radius: 12px; overflow: hidden;">
 <tr>
-<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #FFFFFF !important;">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr>
 <td class="col-mobile" width="50%" style="vertical-align: top; padding-right: 10px;">
@@ -226,7 +226,7 @@ a { text-decoration: none; }
 </td>
 </tr>
 <tr>
-<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #FFFFFF !important;">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr>
 <td class="col-mobile" width="50%" style="vertical-align: top; padding-right: 10px;">
@@ -242,14 +242,14 @@ a { text-decoration: none; }
 </td>
 </tr>
 ${data.address || data.city ? `<tr>
-<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7; background-color: #FFFFFF !important;">
 <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0 !important; text-transform: uppercase; font-weight: bold;">Lieu de prestation</p>
 <p style="margin: 0; font-size: 15px; color: #2D3748 !important;">${data.address || ''}</p>
 <p style="margin: 2px 0 0 0; font-size: 15px; color: #2D3748 !important;">${data.postalCode || ''} ${data.city || ''}</p>
 </td>
 </tr>` : ''}
 <tr>
-<td style="padding: 20px 25px; background-color: #F8FAFC !important;">
+<td style="padding: 20px 25px; background-color: #FFFFFF !important;">
 <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0 !important; text-transform: uppercase; font-weight: bold;">Détails / Message</p>
 <p style="margin: 0; font-size: 14px; color: #4A5568 !important; line-height: 1.5; font-style: italic;">"${data.message || 'Aucun message spécifique'}"</p>
 </td>
@@ -276,7 +276,7 @@ ${data.address || data.city ? `<tr>
 </table>
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container">
 <tr>
-<td align="center" style="padding-top: 20px; background-color: #FFF9F5 !important;">
+<td align="center" style="padding-top: 20px; background-color: #FFFFFF !important;">
 <p style="font-size: 10px; color: #A0AEC0 !important; font-family: 'Quicksand', sans-serif;">Notification automatique - Nouvelle demande client.</p>
 </td>
 </tr>
