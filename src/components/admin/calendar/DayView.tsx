@@ -9,9 +9,10 @@ interface DayViewProps {
   onMissionClick: (mission: any, e: React.MouseEvent) => void;
   onDeleteMission: (missionId: string, e: React.MouseEvent) => void;
   getStatusColor: (status: string, colorIndex: number) => string;
+  calculateMissionAmount: (mission: any) => number;
 }
 
-export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor }: DayViewProps) {
+export function DayView({ currentDate, missions, onDayClick, onMissionClick, onDeleteMission, getStatusColor, calculateMissionAmount }: DayViewProps) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const getMissionsForDay = () => {
@@ -113,11 +114,9 @@ export function DayView({ currentDate, missions, onDayClick, onMissionClick, onD
                       {mission.description}
                     </div>
                   )}
-                  {mission.montant && (
-                    <div className="text-sm font-medium mt-1">
-                      {mission.montant}€
-                    </div>
-                  )}
+                  <div className="text-sm font-medium mt-1">
+                    {calculateMissionAmount(mission).toFixed(2)}€
+                  </div>
                 </div>
                 <button
                   onClick={(e) => onDeleteMission(mission.id, e)}
