@@ -109,7 +109,8 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     postalCode: '',
     city: '',
     service: prefilledService || 'Garde à domicile',
-    message: ''
+    message: '',
+    honeypot: '' // Champ anti-spam invisible
   });
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -138,7 +139,8 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
           postalCode: formData.postalCode,
           city: formData.city,
           service: formData.service,
-          message: formData.message
+          message: formData.message,
+          honeypot: formData.honeypot // Champ anti-spam
         })
       });
 
@@ -158,7 +160,8 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         postalCode: '',
         city: '',
         service: prefilledService || 'Garde à domicile',
-        message: ''
+        message: '',
+        honeypot: ''
       });
     } catch (error) {
       clearTimeout(optimisticTimeout);
@@ -303,7 +306,24 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
                 ></textarea>
               </div>
 
-              <NannyButton 
+              {/* Honeypot anti-spam - invisible pour les humains */}
+              <input
+                type="text"
+                name="website"
+                value={formData.honeypot}
+                onChange={(e) => setFormData({...formData, honeypot: e.target.value})}
+                style={{ 
+                  position: 'absolute', 
+                  left: '-9999px', 
+                  width: '1px', 
+                  height: '1px' 
+                }}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
+
+              <NannyButton
                 variant="accent" 
                 type="submit" 
                 className="w-full mt-2 shadow-xl hover:shadow-2xl py-4 text-lg"
