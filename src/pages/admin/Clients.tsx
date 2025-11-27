@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ClientDialog } from '@/components/admin/ClientDialog';
-import { ClientMissionsDialog } from '@/components/admin/ClientMissionsDialog';
+import { ClientMissionsView } from '@/components/admin/ClientMissionsView';
 import { Loader2, Plus, Search, Pencil, Trash2, Users, FileText } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -48,8 +48,7 @@ const Clients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-  const [missionsDialogOpen, setMissionsDialogOpen] = useState(false);
-  const [clientForMissions, setClientForMissions] = useState<Client | null>(null);
+  const [selectedClientForMissions, setSelectedClientForMissions] = useState<Client | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -205,6 +204,16 @@ const Clients = () => {
     );
   }
 
+  // Show missions view if a client is selected
+  if (selectedClientForMissions) {
+    return (
+      <ClientMissionsView
+        client={selectedClientForMissions}
+        onBack={() => setSelectedClientForMissions(null)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -287,8 +296,7 @@ const Clients = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setClientForMissions(client);
-                          setMissionsDialogOpen(true);
+                          setSelectedClientForMissions(client);
                         }}
                         title="Voir les missions"
                       >
@@ -322,12 +330,6 @@ const Clients = () => {
         client={selectedClient}
         onSave={handleSave}
         loading={saving}
-      />
-
-      <ClientMissionsDialog
-        open={missionsDialogOpen}
-        onOpenChange={setMissionsDialogOpen}
-        client={clientForMissions}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
