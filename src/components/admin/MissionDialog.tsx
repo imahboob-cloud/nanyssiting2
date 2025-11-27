@@ -41,6 +41,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [nannysitters, setNannysitters] = useState<any[]>([]);
+  const [tarifs, setTarifs] = useState<any[]>([]);
   const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
   const [heureDebut, setHeureDebut] = useState('09:00');
   const [heureFin, setHeureFin] = useState('18:00');
@@ -58,22 +59,76 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
   useEffect(() => {
     loadClients();
     loadNannySitters();
+    loadTarifs();
   }, []);
+
+  // Normalize time format from "HH:MM:SS" to "HH:MM"
+  const normalizeTime = (time: string): string => {
+    return time.substring(0, 5);
+  };
+
+  // Calculate hours between two times
+  const calculateHours = (heureDebut: string, heureFin: string): number => {
+    const [startHour, startMin] = heureDebut.split(':').map(Number);
+    const [endHour, endMin] = heureFin.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    return (endMinutes - startMinutes) / 60;
+  };
+
+  // Get appropriate tarif based on day of week
+  const getAppropriateTarif = (date: Date) => {
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    const appropriateTarifs = tarifs.filter(t => 
+      t.type_jour === 'tous' || 
+      (isWeekend && t.type_jour === 'weekend') || 
+      (!isWeekend && t.type_jour === 'semaine')
+    );
+    
+    const specificTarif = appropriateTarifs.find(t => 
+      isWeekend ? t.type_jour === 'weekend' : t.type_jour === 'semaine'
+    );
+    
+    return specificTarif || appropriateTarifs[0];
+  };
+
+  // Calculate mission amount based on tarifs
+  const calculateMissionAmount = (): number => {
+    if (!date) return 0;
+    const hours = calculateHours(heureDebut, heureFin);
+    const tarif = getAppropriateTarif(date);
+    const prixHoraire = tarif ? parseFloat(tarif.tarif_horaire) : 0;
+    return prixHoraire * hours;
+  };
 
   useEffect(() => {
     if (mission) {
       setValue('client_id', mission.client_id);
       setValue('nannysitter_id', mission.nannysitter_id || '');
       setDate(new Date(mission.date));
-      setHeureDebut(mission.heure_debut);
-      setHeureFin(mission.heure_fin);
+      setHeureDebut(normalizeTime(mission.heure_debut));
+      setHeureFin(normalizeTime(mission.heure_fin));
       setValue('description', mission.description || '');
-      setValue('montant', mission.montant?.toString() || '');
+      // Calculate the correct amount based on tarifs instead of using DB value
+      const calculatedAmount = calculateMissionAmount();
+      setValue('montant', calculatedAmount > 0 ? calculatedAmount.toFixed(2) : '');
       setValue('statut', mission.statut);
     } else if (selectedDate) {
       setDate(selectedDate);
     }
-  }, [mission, selectedDate, setValue]);
+  }, [mission, selectedDate, setValue, tarifs]);
+
+  // Recalculate amount when date or hours change
+  useEffect(() => {
+    if (date && heureDebut && heureFin && tarifs.length > 0) {
+      const amount = calculateMissionAmount();
+      if (amount > 0) {
+        setValue('montant', amount.toFixed(2));
+      }
+    }
+  }, [date, heureDebut, heureFin, tarifs, setValue]);
 
   const loadClients = async () => {
     const { data, error } = await supabase
@@ -92,6 +147,15 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
       .order('nom', { ascending: true });
     
     if (!error && data) setNannysitters(data);
+  };
+
+  const loadTarifs = async () => {
+    const { data } = await supabase
+      .from('tarifs')
+      .select('*')
+      .eq('actif', true);
+    
+    setTarifs(data || []);
   };
 
   const handleDelete = () => {
@@ -342,8 +406,18 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="montant">Montant (€)</Label>
-            <Input type="number" step="0.01" {...register('montant')} placeholder="0.00" />
+            <Label htmlFor="montant">Montant calculé (€)</Label>
+            <Input 
+              type="number" 
+              step="0.01" 
+              {...register('montant')} 
+              placeholder="0.00"
+              disabled
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground">
+              Montant calculé automatiquement selon les tarifs configurés
+            </p>
           </div>
 
           <div className="space-y-2">
