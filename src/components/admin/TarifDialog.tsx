@@ -64,9 +64,12 @@ export function TarifDialog({ open, onOpenChange, tarif, onSuccess }: TarifDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="tarif-dialog-description">
         <DialogHeader>
           <DialogTitle>{tarif ? "Modifier le tarif" : "Nouveau tarif"}</DialogTitle>
+          <p id="tarif-dialog-description" className="sr-only">
+            Formulaire de configuration des tarifs horaires
+          </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

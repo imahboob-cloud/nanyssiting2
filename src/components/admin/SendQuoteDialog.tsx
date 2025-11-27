@@ -134,9 +134,12 @@ export function SendQuoteDialog({ open, onOpenChange, quote, onSuccess }: SendQu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="send-quote-dialog-description">
         <DialogHeader>
           <DialogTitle>Envoyer le devis</DialogTitle>
+          <p id="send-quote-dialog-description" className="sr-only">
+            Formulaire d'envoi de devis par email
+          </p>
         </DialogHeader>
         <div className="space-y-4">
           <Button

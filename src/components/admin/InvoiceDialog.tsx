@@ -300,17 +300,20 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="invoice-dialog-description">
         <DialogHeader>
           <DialogTitle>
             {quoteData ? 'Générer une facture depuis le devis' : invoice ? 'Modifier la facture' : 'Nouvelle facture'}
           </DialogTitle>
+          <p id="invoice-dialog-description" className="sr-only">
+            Formulaire de création ou modification d'une facture client
+          </p>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="client_id">Client *</Label>
-              <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id')} disabled={!!quoteData}>
+              <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id') || ''} disabled={!!quoteData}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
@@ -394,7 +397,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                   </div>
                   <div className="col-span-1">
                     <Label className="text-xs">Début</Label>
-                    <Select value={ligne.heure_debut} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
+                    <Select value={ligne.heure_debut || '09:00'} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -414,7 +417,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                   </div>
                   <div className="col-span-1">
                     <Label className="text-xs">Fin</Label>
-                    <Select value={ligne.heure_fin} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
+                    <Select value={ligne.heure_fin || '17:00'} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -486,7 +489,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
 
             <div className="space-y-2">
               <Label htmlFor="statut">Statut *</Label>
-              <Select onValueChange={(value: any) => setValue('statut', value)} value={watch('statut')}>
+              <Select onValueChange={(value: any) => setValue('statut', value)} value={watch('statut') || 'brouillon'}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

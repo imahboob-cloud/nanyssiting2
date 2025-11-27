@@ -20,9 +20,12 @@ export function FormRecapDialog({ open, onOpenChange, client }: FormRecapDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby="form-recap-description">
         <DialogHeader>
           <DialogTitle>Récapitulatif du formulaire</DialogTitle>
+          <p id="form-recap-description" className="sr-only">
+            Détails complets du formulaire de contact soumis par le client
+          </p>
         </DialogHeader>
 
         <div className="space-y-6">
