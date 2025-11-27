@@ -324,14 +324,17 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="mission-dialog-description">
         <DialogHeader>
           <DialogTitle>{mission ? 'Modifier la mission' : 'Nouvelle mission'}</DialogTitle>
+          <p id="mission-dialog-description" className="sr-only">
+            Formulaire de création ou modification d'une mission de babysitting
+          </p>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="client_id">Client *</Label>
-            <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id')}>
+            <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id') || ''}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
@@ -348,7 +351,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
 
           <div className="space-y-2">
             <Label htmlFor="nannysitter_id">NannySitter</Label>
-            <Select onValueChange={(value) => setValue('nannysitter_id', value)} value={watch('nannysitter_id') || undefined}>
+            <Select onValueChange={(value) => setValue('nannysitter_id', value)} value={watch('nannysitter_id') || ''}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une nannysitter (optionnel)" />
               </SelectTrigger>
@@ -524,7 +527,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
 
           <div className="space-y-2">
             <Label htmlFor="statut">Statut *</Label>
-            <Select onValueChange={(value: any) => setValue('statut', value)} value={watch('statut')}>
+            <Select onValueChange={(value: any) => setValue('statut', value)} value={watch('statut') || 'planifie'}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -139,9 +139,12 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, client, onSucce
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="send-invoice-dialog-description">
         <DialogHeader>
           <DialogTitle>Envoyer la facture</DialogTitle>
+          <p id="send-invoice-dialog-description" className="sr-only">
+            Formulaire d'envoi de facture par email
+          </p>
         </DialogHeader>
         <div className="space-y-4">
           <Button

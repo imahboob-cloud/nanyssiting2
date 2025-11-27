@@ -374,15 +374,18 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="quote-dialog-description">
         <DialogHeader>
           <DialogTitle>{quote ? 'Modifier le devis' : 'Nouveau devis'}</DialogTitle>
+          <p id="quote-dialog-description" className="sr-only">
+            Formulaire de création ou modification d'un devis client
+          </p>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="client_id">Client *</Label>
-              <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id')}>
+              <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id') || ''}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
@@ -466,7 +469,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   </div>
                   <div className="col-span-1">
                     <Label className="text-xs">Début</Label>
-                    <Select value={ligne.heure_debut} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
+                    <Select value={ligne.heure_debut || '09:00'} onValueChange={(value) => updateLigne(index, 'heure_debut', value)}>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -486,7 +489,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
                   </div>
                   <div className="col-span-1">
                     <Label className="text-xs">Fin</Label>
-                    <Select value={ligne.heure_fin} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
+                    <Select value={ligne.heure_fin || '17:00'} onValueChange={(value) => updateLigne(index, 'heure_fin', value)}>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -568,7 +571,7 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
 
             <div className="space-y-2">
               <Label htmlFor="statut">Statut *</Label>
-              <Select onValueChange={(value: any) => setValue('statut', value)} value={watch('statut')}>
+              <Select onValueChange={(value: any) => setValue('statut', value)} value={watch('statut') || 'brouillon'}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -636,9 +639,12 @@ export function QuoteDialog({ open, onOpenChange, quote, onSuccess }: QuoteDialo
       </DialogContent>
 
       <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="duplicate-dialog-description">
           <DialogHeader>
             <DialogTitle>Dupliquer sur plusieurs dates</DialogTitle>
+            <p id="duplicate-dialog-description" className="sr-only">
+              Sélectionner plusieurs dates pour dupliquer une ligne de devis
+            </p>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
