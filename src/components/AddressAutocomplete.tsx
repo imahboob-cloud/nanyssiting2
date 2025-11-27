@@ -57,17 +57,35 @@ export function AddressAutocomplete({
 
     setIsLoading(true);
     try {
+      // Utilisation de Photon API (OpenStreetMap) avec filtre Belgique
       const response = await fetch(
-        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=fr&countrycodes=be`
       );
       const data = await response.json();
       
-      const formattedSuggestions: AddressSuggestion[] = data.features.map((feature: any) => ({
-        label: feature.properties.label,
-        postcode: feature.properties.postcode || '',
-        city: feature.properties.city || '',
-        context: feature.properties.context || ''
-      }));
+      const formattedSuggestions: AddressSuggestion[] = data.features.map((feature: any) => {
+        const props = feature.properties;
+        const street = props.street || props.name || '';
+        const housenumber = props.housenumber || '';
+        const postcode = props.postcode || '';
+        const city = props.city || props.locality || '';
+        
+        // Construire l'adresse complète
+        let label = '';
+        if (street) {
+          label = housenumber ? `${street} ${housenumber}` : street;
+        }
+        if (postcode || city) {
+          label += label ? `, ${postcode} ${city}`.trim() : `${postcode} ${city}`.trim();
+        }
+        
+        return {
+          label: label || props.name || 'Adresse inconnue',
+          postcode: postcode,
+          city: city,
+          context: `${city}, Belgique`
+        };
+      });
 
       setSuggestions(formattedSuggestions);
       setShowSuggestions(true);
