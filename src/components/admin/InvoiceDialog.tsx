@@ -377,13 +377,13 @@ export function InvoiceDialog({ open, onOpenChange, invoice, onSuccess, quoteDat
                           )}
                         >
                           <CalendarIcon className="mr-2 h-3 w-3" />
-                          {ligne.date ? format(new Date(ligne.date), "dd/MM/yy", { locale: fr }) : "Date"}
+                          {ligne.date && !isNaN(new Date(ligne.date).getTime()) ? format(new Date(ligne.date), "dd/MM/yy", { locale: fr }) : "Date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={ligne.date ? new Date(ligne.date) : undefined}
+                          selected={ligne.date && !isNaN(new Date(ligne.date).getTime()) ? new Date(ligne.date) : undefined}
                           onSelect={(date) => updateLigne(index, 'date', date ? format(date, 'yyyy-MM-dd') : '')}
                           initialFocus
                           locale={fr}
