@@ -126,7 +126,7 @@ async function checkSuspiciousEmailPattern(email: string, clientIp: string): Pro
     return { suspicious: false };
   }
 
-  // Vérifier les soumissions récentes (dernières 24h) avec pattern similaire
+  // Vérifier les soumissions récentes (dernières 24h)
   const oneDayAgo = new Date();
   oneDayAgo.setHours(oneDayAgo.getHours() - 24);
   
@@ -135,21 +135,25 @@ async function checkSuspiciousEmailPattern(email: string, clientIp: string): Pro
     .select('email, created_at')
     .gte('created_at', oneDayAgo.toISOString())
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(200); // Augmenté pour mieux détecter les attaques
 
   if (error || !recentClients) {
     console.warn('⚠️ Impossible de vérifier les patterns d\'emails:', error);
     return { suspicious: false }; // Ne pas bloquer en cas d'erreur DB
   }
 
-  // Compter combien d'emails récents ont le même pattern (préfixe + domaine)
+  // 🎯 DÉTECTION 1: Pattern spécifique (même préfixe)
   let matchingPatternCount = 0;
   const matchingEmails: string[] = [];
+
+  // 🎯 DÉTECTION 2: Volume global d'emails numérotés sur même domaine
+  let numberedEmailsOnDomainCount = 0;
+  const numberedEmailsExamples: string[] = [];
 
   for (const client of recentClients) {
     const clientPattern = extractEmailPattern(client.email);
     
-    // Pattern suspect: même préfixe (sans chiffres) + même domaine + contient des chiffres
+    // Pattern suspect spécifique: même préfixe + même domaine + contient des chiffres
     if (
       clientPattern.prefix === pattern.prefix &&
       clientPattern.domain === pattern.domain &&
@@ -158,13 +162,32 @@ async function checkSuspiciousEmailPattern(email: string, clientIp: string): Pro
       matchingPatternCount++;
       matchingEmails.push(client.email);
     }
+
+    // Pattern suspect global: emails numérotés sur même domaine (peu importe le préfixe)
+    if (
+      clientPattern.domain === pattern.domain &&
+      clientPattern.hasNumber
+    ) {
+      numberedEmailsOnDomainCount++;
+      if (numberedEmailsExamples.length < 5) {
+        numberedEmailsExamples.push(client.email);
+      }
+    }
   }
 
-  // 🚨 SEUIL D'ALERTE: Si plus de 3 emails avec même pattern en 24h = SUSPECT
+  // 🚨 SEUIL 1: Si plus de 3 emails avec MÊME préfixe en 24h = SUSPECT
   if (matchingPatternCount >= 3) {
     return {
       suspicious: true,
-      reason: `Pattern suspect détecté: ${matchingPatternCount} emails similaires (${pattern.prefix}*@${pattern.domain}) en 24h. Exemples: ${matchingEmails.slice(0, 3).join(', ')}`
+      reason: `Pattern spécifique détecté: ${matchingPatternCount} emails similaires (${pattern.prefix}*@${pattern.domain}) en 24h. Exemples: ${matchingEmails.slice(0, 3).join(', ')}`
+    };
+  }
+
+  // 🚨 SEUIL 2: Si plus de 10 emails numérotés sur MÊME domaine en 24h = ATTAQUE MASSIVE
+  if (numberedEmailsOnDomainCount >= 10) {
+    return {
+      suspicious: true,
+      reason: `Attaque massive détectée: ${numberedEmailsOnDomainCount} emails numérotés sur @${pattern.domain} en 24h. Exemples: ${numberedEmailsExamples.join(', ')}`
     };
   }
 
