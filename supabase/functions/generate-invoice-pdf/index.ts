@@ -156,7 +156,8 @@ const handler = async (req: Request): Promise<Response> => {
     doc.text(`N° ${invoice.numero || 'INV-001'}`, rightMargin - 5, 41.5, { align: 'right' });
 
     // --- CLIENT CARD ---
-    yPos = 95;
+    // Position dynamically based on company info height with safety margin
+    yPos = Math.max(currentY + 15, 95);
     
     // Background Card
     doc.setFillColor(COLORS.bgLight[0], COLORS.bgLight[1], COLORS.bgLight[2]);
