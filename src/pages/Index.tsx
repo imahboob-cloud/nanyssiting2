@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { NannyButton } from '@/components/NannyButton';
 import { SectionTitle } from '@/components/SectionTitle';
-import { ServiceSelect } from '@/components/ServiceSelect';
 import { PhoneReveal } from '@/components/PhoneReveal';
 import { WhatsAppIcon } from '@/components/WhatsAppIcon';
 import SuccessPopup from '@/components/SuccessPopup';
@@ -283,15 +282,11 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
                   />
                 </div>
               </div>
-              
-              <ServiceSelect
-                value={formData.service}
-                onChange={(value) => setFormData({...formData, service: value})}
-              />
 
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide ml-3 mb-1 block">Détails (Âge des enfants, horaires, etc.)</label>
                 <textarea
+                  required
                   value={formData.message}
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
                   className="w-full bg-muted border border-border rounded-2xl px-5 py-3 focus:outline-none focus:border-salmon focus:ring-1 focus:ring-salmon transition-colors h-24 resize-none"
