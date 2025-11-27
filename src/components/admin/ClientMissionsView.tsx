@@ -6,7 +6,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, FileText, Euro, TrendingUp, CalendarDays, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar, Clock, FileText, Euro, TrendingUp, CalendarDays, ArrowLeft, Download, Receipt } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
@@ -21,6 +21,7 @@ type Mission = Tables<'missions'> & {
     prenom: string;
   } | null;
 };
+type Invoice = Tables<'invoices'>;
 
 interface InvoiceLine {
   date: string;
@@ -39,6 +40,7 @@ interface ClientMissionsViewProps {
 export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) {
   const [loading, setLoading] = useState(false);
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [tarifs, setTarifs] = useState<any[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: startOfMonth(new Date()),
@@ -46,10 +48,12 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
   }));
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     loadTarifs();
+    loadInvoices();
   }, []);
 
   useEffect(() => {
@@ -69,6 +73,29 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
       setTarifs(data || []);
     } catch (error) {
       console.error('Error loading tarifs:', error);
+    }
+  };
+
+  const loadInvoices = async () => {
+    if (!client) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('client_id', client.id)
+        .in('statut', ['brouillon', 'envoyee'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setInvoices(data || []);
+    } catch (error) {
+      console.error('Error loading invoices:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de charger les factures',
+      });
     }
   };
 
@@ -219,6 +246,50 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
         {statusLabels[status] || status}
       </Badge>
     );
+  };
+
+  const getInvoiceStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { className: string; label: string }> = {
+      brouillon: { className: 'bg-secondary', label: 'Brouillon' },
+      envoyee: { className: 'bg-primary', label: 'Envoyée' },
+      payee: { className: 'bg-green-500', label: 'Payée' },
+      en_retard: { className: 'bg-red-500', label: 'En retard' },
+    };
+
+    const config = statusConfig[status] || statusConfig.brouillon;
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
+  const handleDownloadInvoice = async (invoiceId: string, invoiceNumber: string) => {
+    setDownloadingPdf(invoiceId);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-invoice-pdf', {
+        body: { invoiceId },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        const link = document.createElement('a');
+        link.href = data.pdf;
+        link.download = `Facture-${invoiceNumber}.pdf`;
+        link.click();
+        
+        toast({
+          title: 'Succès',
+          description: 'PDF téléchargé avec succès',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error downloading invoice PDF:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Erreur lors du téléchargement du PDF',
+      });
+    } finally {
+      setDownloadingPdf(null);
+    }
   };
 
   const totalToPay = calculateTotal();
@@ -406,12 +477,86 @@ export function ClientMissionsView({ client, onBack }: ClientMissionsViewProps) 
         </CardContent>
       </Card>
 
+      {/* Invoices Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Factures générées
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {invoices.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Aucune facture en brouillon ou envoyée</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {invoices.map((invoice) => (
+                <Card key={invoice.id} className="hover:border-primary/50 transition-colors">
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold">{invoice.numero}</span>
+                          {getInvoiceStatusBadge(invoice.statut || 'brouillon')}
+                          <Badge variant="outline" className="font-mono">
+                            {invoice.created_at && format(new Date(invoice.created_at), 'dd/MM/yyyy', { locale: fr })}
+                          </Badge>
+                        </div>
+                        
+                        {invoice.date_echeance && (
+                          <p className="text-sm text-muted-foreground">
+                            Échéance: {format(new Date(invoice.date_echeance), 'dd/MM/yyyy', { locale: fr })}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-primary">
+                            {invoice.montant_ttc?.toFixed(2)} €
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            TTC
+                          </p>
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadInvoice(invoice.id, invoice.numero)}
+                          disabled={downloadingPdf === invoice.id}
+                        >
+                          {downloadingPdf === invoice.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4 mr-2" />
+                              Télécharger
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <InvoiceDialog
         open={invoiceDialogOpen}
         onOpenChange={setInvoiceDialogOpen}
         quoteData={invoiceData}
         onSuccess={() => {
           setInvoiceDialogOpen(false);
+          loadInvoices(); // Recharger les factures après création
           toast({
             title: 'Succès',
             description: 'Facture générée avec succès',
