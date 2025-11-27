@@ -20,24 +20,29 @@ type InvoiceWithClient = Invoice & {
 interface SendInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: InvoiceWithClient | null;
+  invoice: Invoice | null;
+  client: {
+    nom: string;
+    prenom: string;
+    email: string | null;
+  } | null;
   onSuccess: () => void;
 }
 
-export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: SendInvoiceDialogProps) {
+export function SendInvoiceDialog({ open, onOpenChange, invoice, client, onSuccess }: SendInvoiceDialogProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const { toast } = useToast();
 
-  // Update email when invoice changes
+  // Update email when client changes
   useEffect(() => {
-    if (invoice?.clients?.email) {
-      setEmail(invoice.clients.email);
+    if (client?.email) {
+      setEmail(client.email);
     } else {
       setEmail('');
     }
-  }, [invoice]);
+  }, [client]);
 
   const handleDownloadPdf = async () => {
     if (!invoice) return;
@@ -167,7 +172,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice, onSuccess }: Se
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Client:</span>
               <span className="font-medium">
-                {invoice.clients ? `${invoice.clients.prenom} ${invoice.clients.nom}` : '-'}
+                {client ? `${client.prenom} ${client.nom}` : '-'}
               </span>
             </div>
             <div className="flex justify-between text-sm">
