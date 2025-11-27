@@ -57,41 +57,33 @@ export function AddressAutocomplete({
 
     setIsLoading(true);
     try {
-      // Utilisation de Photon API (OpenStreetMap) avec filtre Belgique
+      // Nominatim OpenStreetMap pour la Belgique
       const response = await fetch(
-        `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=fr&countrycodes=be`
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=be&limit=5&q=${encodeURIComponent(
+          query,
+        )}`,
       );
       const data = await response.json();
-      
-      // Vérifier si features existe
-      if (!data || !data.features || !Array.isArray(data.features)) {
-        console.warn('No features in response:', data);
+
+      if (!Array.isArray(data)) {
+        console.warn('Unexpected nominatim response:', data);
         setSuggestions([]);
         setShowSuggestions(false);
         return;
       }
-      
-      const formattedSuggestions: AddressSuggestion[] = data.features.map((feature: any) => {
-        const props = feature.properties;
-        const street = props.street || props.name || '';
-        const housenumber = props.housenumber || '';
-        const postcode = props.postcode || '';
-        const city = props.city || props.locality || '';
-        
-        // Construire l'adresse complète
-        let label = '';
-        if (street) {
-          label = housenumber ? `${street} ${housenumber}` : street;
-        }
-        if (postcode || city) {
-          label += label ? `, ${postcode} ${city}`.trim() : `${postcode} ${city}`.trim();
-        }
-        
+
+      const formattedSuggestions: AddressSuggestion[] = data.map((item: any) => {
+        const address = item.address || {};
+        const label: string = item.display_name || '';
+        const postcode: string = address.postcode || '';
+        const city: string =
+          address.city || address.town || address.village || address.municipality || '';
+
         return {
-          label: label || props.name || 'Adresse inconnue',
-          postcode: postcode,
-          city: city,
-          context: `${city}, Belgique`
+          label: label || 'Adresse inconnue',
+          postcode,
+          city,
+          context: `${city} ${postcode}`.trim(),
         };
       });
 
