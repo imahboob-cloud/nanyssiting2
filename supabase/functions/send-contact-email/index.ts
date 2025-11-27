@@ -54,10 +54,10 @@ a { text-decoration: none; }
 </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #FFF9F5 !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFF9F5 !important;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFF9F5" style="background-color: #FFF9F5 !important;">
 <tr>
 <td align="center" style="padding: 40px 0;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" bgcolor="#FFFFFF" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 <tr>
 <td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff !important;">
 <h1 style="margin: 0; font-family: 'Quicksand', sans-serif; font-size: 32px; color: #2D3748 !important; font-weight: 700;">NannySitting</h1>
@@ -180,10 +180,10 @@ a { text-decoration: none; }
 </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #FFF9F5 !important; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748 !important;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFF9F5 !important;">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFF9F5" style="background-color: #FFF9F5 !important;">
 <tr>
 <td align="center" style="padding: 40px 0;">
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" bgcolor="#FFFFFF" style="background-color: #ffffff !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 <tr>
 <td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff !important;">
 <h1 style="margin: 0; font-family: 'Quicksand', sans-serif; font-size: 32px; color: #2D3748 !important; font-weight: 700;">NannySitting</h1>
