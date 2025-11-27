@@ -31,7 +31,8 @@ import {
 } from '@/components/ui/select';
 import { ClientDialog } from '@/components/admin/ClientDialog';
 import { ClientMissionsView } from '@/components/admin/ClientMissionsView';
-import { Loader2, Plus, Search, Pencil, Trash2, Users, FileText } from 'lucide-react';
+import { FormRecapDialog } from '@/components/admin/FormRecapDialog';
+import { Loader2, Plus, Search, Pencil, Trash2, Users, FileText, ClipboardList } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Client = Tables<'clients'>;
@@ -49,6 +50,8 @@ const Clients = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [selectedClientForMissions, setSelectedClientForMissions] = useState<Client | null>(null);
+  const [formRecapDialogOpen, setFormRecapDialogOpen] = useState(false);
+  const [selectedClientForRecap, setSelectedClientForRecap] = useState<Client | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -296,6 +299,17 @@ const Clients = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
+                          setSelectedClientForRecap(client);
+                          setFormRecapDialogOpen(true);
+                        }}
+                        title="Voir le formulaire"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
                           setSelectedClientForMissions(client);
                         }}
                         title="Voir les missions"
@@ -330,6 +344,12 @@ const Clients = () => {
         client={selectedClient}
         onSave={handleSave}
         loading={saving}
+      />
+
+      <FormRecapDialog
+        open={formRecapDialogOpen}
+        onOpenChange={setFormRecapDialogOpen}
+        client={selectedClientForRecap}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
