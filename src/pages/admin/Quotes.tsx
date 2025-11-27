@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Pencil, Trash2, Send, Download, Wand2 } from "lucide-react";
+import { Plus, Search, FileText, Pencil, Trash2, Send, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -281,16 +281,6 @@ const Quotes = () => {
                           title="Envoyer le devis"
                         >
                           <Send className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {quote.statut === 'accepte' && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleGenerateInvoice(quote)}
-                          title="Générer une facture"
-                        >
-                          <Wand2 className="h-4 w-4" />
                         </Button>
                       )}
                       <Button
