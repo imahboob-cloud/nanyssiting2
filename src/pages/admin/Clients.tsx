@@ -30,7 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ClientDialog } from '@/components/admin/ClientDialog';
-import { Loader2, Plus, Search, Pencil, Trash2, Users } from 'lucide-react';
+import { ClientMissionsDialog } from '@/components/admin/ClientMissionsDialog';
+import { Loader2, Plus, Search, Pencil, Trash2, Users, FileText } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Client = Tables<'clients'>;
@@ -47,6 +48,8 @@ const Clients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [missionsDialogOpen, setMissionsDialogOpen] = useState(false);
+  const [clientForMissions, setClientForMissions] = useState<Client | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -280,6 +283,17 @@ const Clients = () => {
                   <TableCell>{getStatusBadge(client.statut)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setClientForMissions(client);
+                          setMissionsDialogOpen(true);
+                        }}
+                        title="Voir les missions"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(client)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -308,6 +322,12 @@ const Clients = () => {
         client={selectedClient}
         onSave={handleSave}
         loading={saving}
+      />
+
+      <ClientMissionsDialog
+        open={missionsDialogOpen}
+        onOpenChange={setMissionsDialogOpen}
+        client={clientForMissions}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
