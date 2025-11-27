@@ -117,6 +117,12 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Feedback instantané optimiste
+    const optimisticTimeout = setTimeout(() => {
+      // Si la réponse prend plus de 500ms, on montre déjà la popup
+      setIsPopupOpen(true);
+    }, 500);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
@@ -137,6 +143,8 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         })
       });
 
+      clearTimeout(optimisticTimeout);
+      
       if (!response.ok) {
         throw new Error('Erreur lors de l\'envoi du formulaire');
       }
@@ -154,7 +162,9 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
         message: ''
       });
     } catch (error) {
+      clearTimeout(optimisticTimeout);
       console.error('Error submitting form:', error);
+      setIsPopupOpen(false);
       alert('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
