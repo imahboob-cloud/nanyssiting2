@@ -112,7 +112,20 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
   };
 
   const calculateTotal = () => {
-    return missions.reduce((sum, mission) => sum + (mission.montant || 0), 0);
+    return missions.reduce((sum, mission) => {
+      const hours = calculateHours(normalizeTime(mission.heure_debut), normalizeTime(mission.heure_fin));
+      const tarif = getAppropriateTarif(mission.date);
+      const prixHoraire = tarif ? parseFloat(tarif.tarif_horaire) : 0;
+      return sum + (prixHoraire * hours);
+    }, 0);
+  };
+
+  // Calculate the correct amount for a mission based on tarifs
+  const calculateMissionAmount = (mission: Mission): number => {
+    const hours = calculateHours(normalizeTime(mission.heure_debut), normalizeTime(mission.heure_fin));
+    const tarif = getAppropriateTarif(mission.date);
+    const prixHoraire = tarif ? parseFloat(tarif.tarif_horaire) : 0;
+    return prixHoraire * hours;
   };
 
   // Normalize time format from "HH:MM:SS" to "HH:MM"
@@ -414,8 +427,13 @@ export function ClientMissionsDialog({ open, onOpenChange, client }: ClientMissi
                             <p className="text-xs text-muted-foreground">
                               {calculateHours(normalizeTime(mission.heure_debut), normalizeTime(mission.heure_fin)).toFixed(1)}h
                             </p>
+                            <p className="text-xs text-muted-foreground">
+                              {getAppropriateTarif(mission.date) 
+                                ? `${parseFloat(getAppropriateTarif(mission.date).tarif_horaire).toFixed(2)}€/h`
+                                : 'Tarif non configuré'}
+                            </p>
                             <p className="text-lg font-bold text-primary">
-                              {mission.montant?.toFixed(2)} €
+                              {calculateMissionAmount(mission).toFixed(2)} €
                             </p>
                           </div>
                         </div>
