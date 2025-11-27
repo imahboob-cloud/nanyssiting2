@@ -118,11 +118,10 @@ const ContactSection = ({ prefilledService, id }: { prefilledService?: string; i
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Feedback instantané optimiste
+    // Feedback instantané optimiste (200ms = ressenti quasi-instantané)
     const optimisticTimeout = setTimeout(() => {
-      // Si la réponse prend plus de 500ms, on montre déjà la popup
       setIsPopupOpen(true);
-    }, 500);
+    }, 200);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
