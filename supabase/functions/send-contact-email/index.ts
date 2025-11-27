@@ -33,6 +33,7 @@ const contactFormSchema = z.object({
   service: z.string().trim().min(1, "Le service est requis").max(100, "Le service ne peut pas dépasser 100 caractères"),
   message: z.string().trim().max(2000, "Le message ne peut pas dépasser 2000 caractères").optional(),
   honeypot: z.string().max(0, "Spam détecté").optional(), // Honeypot anti-bot
+  recaptchaToken: z.string().min(1, "Token reCAPTCHA requis") // reCAPTCHA v3
 });
 
 interface ContactFormRequest {
@@ -45,6 +46,7 @@ interface ContactFormRequest {
   service: string;
   message?: string;
   honeypot?: string;
+  recaptchaToken?: string; // Optionnel car utilisé seulement pour validation
 }
 
 // Rate limiting storage (en mémoire, réinitialise à chaque redémarrage)
@@ -437,6 +439,64 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // ========== 🛡️ VALIDATION RECAPTCHA V3 ==========
+    console.log('🔒 Validation reCAPTCHA v3...');
+    const recaptchaSecret = Deno.env.get("RECAPTCHA_SECRET_KEY");
+    
+    if (!recaptchaSecret) {
+      console.error('❌ RECAPTCHA_SECRET_KEY non configurée');
+      return new Response(
+        JSON.stringify({ error: 'Configuration serveur manquante' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const recaptchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${validationResult.data.recaptchaToken}&remoteip=${clientIp}`;
+    
+    const recaptchaResponse = await fetch(recaptchaVerifyUrl, {
+      method: 'POST'
+    });
+
+    const recaptchaResult = await recaptchaResponse.json();
+
+    console.log('📊 Résultat reCAPTCHA:', {
+      success: recaptchaResult.success,
+      score: recaptchaResult.score,
+      action: recaptchaResult.action,
+      ip: clientIp
+    });
+
+    // ❌ Token invalide
+    if (!recaptchaResult.success) {
+      console.warn('🚫 reCAPTCHA ÉCHEC:', {
+        ip: clientIp,
+        errors: recaptchaResult["error-codes"],
+        timestamp: new Date().toISOString()
+      });
+      return new Response(
+        JSON.stringify({ error: 'Vérification de sécurité échouée' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ⚠️ Score trop bas (bot probable)
+    const scoreThreshold = 0.5; // Score minimum acceptable (0.0 = bot, 1.0 = humain)
+    if (recaptchaResult.score < scoreThreshold) {
+      console.warn('🤖 BOT DÉTECTÉ (score reCAPTCHA faible):', {
+        ip: clientIp,
+        score: recaptchaResult.score,
+        threshold: scoreThreshold,
+        timestamp: new Date().toISOString()
+      });
+      // Retourner un 200 pour tromper le bot
+      return new Response(
+        JSON.stringify({ success: true, message: 'Formulaire reçu' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ reCAPTCHA validé:', { score: recaptchaResult.score });
 
     const {
       name,
