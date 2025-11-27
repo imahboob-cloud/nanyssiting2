@@ -125,14 +125,23 @@ const handler = async (req: Request): Promise<Response> => {
     setFontBrand('bold', 9, COLORS.textDark);
     doc.text(company.denomination_sociale || 'Garde-Malade et Babysitting', margin, yPos);
     setFontBrand('normal', 9, COLORS.textGray);
-    doc.text(company.adresse_siege || '', margin, yPos + 5);
-    doc.text(`TVA: ${company.numero_tva || ''}`, margin, yPos + 10);
-    doc.text(`Tél: ${company.telephone || ''}`, margin, yPos + 15);
-    if (company.email && company.email !== 'contact@nannysitting.be') {
-      doc.text(`Email: ${company.email}`, margin, yPos + 20);
+    let currentY = yPos + 5;
+    doc.text(company.adresse_siege || '', margin, currentY);
+    currentY += 5;
+    doc.text(`TVA: ${company.numero_tva || ''}`, margin, currentY);
+    currentY += 5;
+    doc.text(`Tél: ${company.telephone || ''}`, margin, currentY);
+    if (company.email) {
+      currentY += 5;
+      doc.text(`Email: ${company.email}`, margin, currentY);
+    }
+    if (company.site_web) {
+      currentY += 5;
+      doc.text(`Web: ${company.site_web}`, margin, currentY);
     }
     if (company.iban) {
-      doc.text(`IBAN: ${company.iban}`, margin, yPos + 25);
+      currentY += 5;
+      doc.text(`IBAN: ${company.iban}`, margin, currentY);
     }
 
     // Invoice Title & Number (Right side)
@@ -147,7 +156,7 @@ const handler = async (req: Request): Promise<Response> => {
     doc.text(`N° ${invoice.numero || 'INV-001'}`, rightMargin - 5, 41.5, { align: 'right' });
 
     // --- CLIENT CARD ---
-    yPos = 85;
+    yPos = 95;
     
     // Background Card
     doc.setFillColor(COLORS.bgLight[0], COLORS.bgLight[1], COLORS.bgLight[2]);
