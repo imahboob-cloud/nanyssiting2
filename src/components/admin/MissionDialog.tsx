@@ -143,6 +143,19 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
           if (error) throw error;
           
           toast({ title: 'NannySitter mise à jour automatiquement' });
+          
+          // Recharger les données de la mission mise à jour
+          const { data: updatedMission } = await supabase
+            .from('missions')
+            .select('*, clients(prenom, nom), nannysitters(prenom, nom)')
+            .eq('id', mission.id)
+            .single();
+          
+          if (updatedMission) {
+            // Mettre à jour l'objet mission local pour l'affichage
+            Object.assign(mission, updatedMission);
+          }
+          
           onSuccess();
         } catch (error: any) {
           toast({
@@ -155,7 +168,7 @@ export function MissionDialog({ open, onOpenChange, mission, selectedDate, onSuc
       
       autoSave();
     }
-  }, [watch('nannysitter_id'), mission]);
+  }, [watch('nannysitter_id'), mission, onSuccess, toast]);
 
   // Recalculate amount when date or hours change
   useEffect(() => {
