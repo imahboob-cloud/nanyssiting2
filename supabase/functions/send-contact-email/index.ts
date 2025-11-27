@@ -107,6 +107,70 @@ function sanitizeHtml(text: string): string {
     .replace(/\//g, "&#x2F;");
 }
 
+// 🛡️ DÉTECTION DE PATTERNS D'EMAILS SUSPECTS
+function extractEmailPattern(email: string): { prefix: string; domain: string; hasNumber: boolean } {
+  const [localPart, domain] = email.toLowerCase().split('@');
+  
+  // Retirer les chiffres pour obtenir le préfixe de base
+  const prefix = localPart.replace(/\d+/g, '');
+  const hasNumber = /\d/.test(localPart);
+  
+  return { prefix, domain: domain || '', hasNumber };
+}
+
+async function checkSuspiciousEmailPattern(email: string, clientIp: string): Promise<{ suspicious: boolean; reason?: string }> {
+  const pattern = extractEmailPattern(email);
+  
+  // Ignorer les emails sans chiffres (moins suspects)
+  if (!pattern.hasNumber) {
+    return { suspicious: false };
+  }
+
+  // Vérifier les soumissions récentes (dernières 24h) avec pattern similaire
+  const oneDayAgo = new Date();
+  oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+  
+  const { data: recentClients, error } = await supabaseAdmin
+    .from('clients')
+    .select('email, created_at')
+    .gte('created_at', oneDayAgo.toISOString())
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (error || !recentClients) {
+    console.warn('⚠️ Impossible de vérifier les patterns d\'emails:', error);
+    return { suspicious: false }; // Ne pas bloquer en cas d'erreur DB
+  }
+
+  // Compter combien d'emails récents ont le même pattern (préfixe + domaine)
+  let matchingPatternCount = 0;
+  const matchingEmails: string[] = [];
+
+  for (const client of recentClients) {
+    const clientPattern = extractEmailPattern(client.email);
+    
+    // Pattern suspect: même préfixe (sans chiffres) + même domaine + contient des chiffres
+    if (
+      clientPattern.prefix === pattern.prefix &&
+      clientPattern.domain === pattern.domain &&
+      clientPattern.hasNumber
+    ) {
+      matchingPatternCount++;
+      matchingEmails.push(client.email);
+    }
+  }
+
+  // 🚨 SEUIL D'ALERTE: Si plus de 3 emails avec même pattern en 24h = SUSPECT
+  if (matchingPatternCount >= 3) {
+    return {
+      suspicious: true,
+      reason: `Pattern suspect détecté: ${matchingPatternCount} emails similaires (${pattern.prefix}*@${pattern.domain}) en 24h. Exemples: ${matchingEmails.slice(0, 3).join(', ')}`
+    };
+  }
+
+  return { suspicious: false };
+}
+
 const createConfirmationEmailHTML = (data: ContactFormRequest) => {
   const nameParts = data.name.trim().split(' ');
   const firstName = nameParts[0] || '';
@@ -508,6 +572,27 @@ serve(async (req) => {
       service,
       message = '',
     } = validationResult.data;
+
+    // ========== 🔍 DÉTECTION PATTERN D'EMAILS SUSPECTS ==========
+    console.log('🔍 Vérification pattern email...');
+    const emailPatternCheck = await checkSuspiciousEmailPattern(email, clientIp);
+    
+    if (emailPatternCheck.suspicious) {
+      console.warn('🚨 PATTERN SUSPECT DÉTECTÉ:', {
+        ip: clientIp,
+        email: email,
+        reason: emailPatternCheck.reason,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Bloquer la requête
+      return new Response(
+        JSON.stringify({ error: 'Trop de demandes similaires détectées. Veuillez réessayer plus tard.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ Pattern email validé');
 
     // 3. SANITIZATION - Nettoyer les données avant insertion
     const sanitizedData = {
