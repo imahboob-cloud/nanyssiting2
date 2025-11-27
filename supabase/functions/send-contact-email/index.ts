@@ -25,6 +25,181 @@ interface ContactFormRequest {
   message: string;
 }
 
+const createConfirmationEmailHTML = (data: ContactFormRequest) => {
+  // Split name into firstName and lastName
+  const nameParts = data.name.trim().split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demande reçue - NannySitting</title>
+  <style>
+    /* Import de la police Quicksand */
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+
+    /* Reset styles pour compatibilité email */
+    body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+    a { text-decoration: none; }
+    
+    /* Styles Responsive */
+    @media only screen and (max-width: 600px) {
+      .container { width: 100% !important; }
+      .mobile-padding { padding-left: 20px !important; padding-right: 20px !important; }
+      .col-mobile { display: block !important; width: 100% !important; padding-bottom: 10px; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFF9F5; font-family: 'Quicksand', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748;">
+
+  <!-- Wrapper Principal -->
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFF9F5;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        
+        <!-- Conteneur Blanc (Carte) -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+          
+          <!-- En-tête Texte -->
+          <tr>
+            <td align="center" style="padding: 40px 0 20px 0;">
+              <h1 style="margin: 0; font-family: 'Quicksand', sans-serif; font-size: 32px; color: #2D3748; font-weight: 700;">NannySitting</h1>
+              <p style="margin: 5px 0 0 0; font-family: 'Quicksand', sans-serif; color: #F79B75; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Plus qu'une garde, une bulle de sérénité</p>
+            </td>
+          </tr>
+
+          <!-- Ligne de séparation -->
+          <tr>
+            <td align="center">
+              <div style="height: 2px; width: 80%; background: linear-gradient(to right, #ffffff, #F79B75, #ffffff); opacity: 0.3;"></div>
+            </td>
+          </tr>
+
+          <!-- Corps du message -->
+          <tr>
+            <td class="mobile-padding" style="padding: 40px 50px;">
+              <h1 style="margin: 0 0 20px 0; font-family: 'Quicksand', sans-serif; font-size: 24px; color: #2D3748; font-weight: 700; text-align: center;">Merci ${firstName}, c'est bien reçu ! ✨</h1>
+              
+              <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #4A5568; text-align: center; font-family: 'Quicksand', sans-serif;">
+                Nous avons bien pris en compte votre demande. Notre équipe coordinatrice l'analyse actuellement avec soin.
+              </p>
+
+              <!-- Message important de délai -->
+              <div style="background-color: #E6FFFA; border: 1px solid #81B7A9; border-radius: 8px; padding: 15px; margin-bottom: 30px; text-align: center;">
+                <p style="margin: 0; color: #2D3748; font-weight: 600; font-size: 14px; font-family: 'Quicksand', sans-serif;">
+                  📞 Nous prendrons contact avec vous <span style="color: #F79B75; text-decoration: underline;">dans la journée</span> pour affiner vos besoins.
+                </p>
+              </div>
+
+              <p style="font-size: 14px; color: #81B7A9; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; text-align: center; font-family: 'Quicksand', sans-serif;">
+                Récapitulatif de vos informations
+              </p>
+
+              <!-- Tableau Récapitulatif des infos formulaire -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC; border-radius: 12px; overflow: hidden;">
+                
+                <!-- Identité -->
+                <tr>
+                  <td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td class="col-mobile" width="50%" style="vertical-align: top;">
+                          <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0; text-transform: uppercase; font-weight: bold;">Nom complet</p>
+                          <p style="margin: 0; font-size: 15px; color: #2D3748; font-weight: 600;">${firstName} ${lastName}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Contact -->
+                <tr>
+                  <td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td class="col-mobile" width="50%" style="vertical-align: top; padding-right: 10px;">
+                          <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0; text-transform: uppercase; font-weight: bold;">Email</p>
+                          <p style="margin: 0; font-size: 15px; color: #2D3748;">${data.email}</p>
+                        </td>
+                        <td class="col-mobile" width="50%" style="vertical-align: top;">
+                          <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0; text-transform: uppercase; font-weight: bold;">Téléphone</p>
+                          <p style="margin: 0; font-size: 15px; color: #2D3748;">${data.phone}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                ${data.address || data.city ? `
+                <!-- Lieu -->
+                <tr>
+                  <td style="padding: 20px 25px; border-bottom: 1px solid #EDF2F7;">
+                    <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0; text-transform: uppercase; font-weight: bold;">Lieu de prestation</p>
+                    <p style="margin: 0; font-size: 15px; color: #2D3748;">${data.address || ''}</p>
+                    <p style="margin: 2px 0 0 0; font-size: 15px; color: #2D3748;">${data.postalCode || ''} ${data.city || ''}</p>
+                  </td>
+                </tr>
+                ` : ''}
+
+                <!-- Détails / Message -->
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="margin: 0 0 5px 0; font-size: 11px; color: #A0AEC0; text-transform: uppercase; font-weight: bold;">Vos besoins / Détails</p>
+                    <p style="margin: 0; font-size: 14px; color: #4A5568; line-height: 1.5; font-style: italic;">"${data.message || 'Non spécifié'}"</p>
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #2D3748; padding: 30px; text-align: center;">
+              <p style="margin: 0 0 10px 0; color: #ffffff; font-size: 14px; font-weight: bold; font-family: 'Quicksand', sans-serif;">NannySitting</p>
+              
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+                  <td style="padding: 0 10px;">
+                    <a href="mailto:contact@nannysitting.be" style="color: #F79B75; text-decoration: none; font-size: 12px; font-family: 'Quicksand', sans-serif;">Nous contacter</a>
+                  </td>
+                  <td style="padding: 0 10px;">
+                    <a href="https://www.nannysitting.be" style="color: #F79B75; text-decoration: none; font-size: 12px; font-family: 'Quicksand', sans-serif;">Site Web</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 20px 0 0 0; color: #718096; font-size: 10px; font-family: 'Quicksand', sans-serif;">
+                © 2025 NannySitting.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container">
+           <tr>
+             <td align="center" style="padding-top: 20px;">
+               <p style="font-size: 10px; color: #A0AEC0; font-family: 'Quicksand', sans-serif;">Ceci est une notification automatique suite à votre demande sur notre site.</p>
+             </td>
+           </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+  `;
+};
+
 const createEmailHTML = (data: ContactFormRequest) => {
   // Split name into firstName and lastName
   const nameParts = data.name.trim().split(' ');
@@ -231,7 +406,7 @@ serve(async (req) => {
       console.log('Prospect saved to database successfully');
     }
 
-    // Send email using Resend API directly
+    // Send notification email to company
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -250,14 +425,38 @@ serve(async (req) => {
     const resendData = await resendResponse.json();
 
     if (!resendResponse.ok) {
-      console.error('Error from Resend:', resendData);
-      throw new Error(resendData.message || 'Failed to send email');
+      console.error('Error from Resend (company notification):', resendData);
+      throw new Error(resendData.message || 'Failed to send company notification email');
     }
 
-    console.log('Email sent successfully:', resendData);
+    console.log('Company notification email sent successfully:', resendData);
+
+    // Send confirmation email to client
+    const confirmationResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: 'NannySitting <onboarding@resend.dev>',
+        to: [email],
+        subject: 'Votre demande a bien été reçue - NannySitting',
+        html: createConfirmationEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
+      }),
+    });
+
+    const confirmationData = await confirmationResponse.json();
+
+    if (!confirmationResponse.ok) {
+      console.error('Error from Resend (client confirmation):', confirmationData);
+      // Continue even if confirmation email fails
+    } else {
+      console.log('Client confirmation email sent successfully:', confirmationData);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, data: resendData }),
+      JSON.stringify({ success: true, companyEmail: resendData, confirmationEmail: confirmationData }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
