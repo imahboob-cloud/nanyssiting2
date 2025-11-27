@@ -3,7 +3,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') as string;
 const GMAIL_USER = Deno.env.get('GMAIL_USER') as string;
 const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') as string;
 
@@ -409,30 +408,35 @@ serve(async (req) => {
       console.log('Prospect saved to database successfully');
     }
 
-    // Send notification email to company
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'NannySitting <onboarding@resend.dev>',
-        to: ['contact@nannysitting.be'],
-        reply_to: email,
+    // Send notification email to company using Gmail
+    try {
+      const companySmtpClient = new SMTPClient({
+        connection: {
+          hostname: "smtp.gmail.com",
+          port: 465,
+          tls: true,
+          auth: {
+            username: GMAIL_USER,
+            password: GMAIL_APP_PASSWORD,
+          },
+        },
+      });
+
+      await companySmtpClient.send({
+        from: GMAIL_USER,
+        to: 'contact@nannysitting.be',
+        replyTo: email,
         subject: `Nouvelle demande de ${name} - ${service}`,
         html: createEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
-      }),
-    });
+      });
 
-    const resendData = await resendResponse.json();
-
-    if (!resendResponse.ok) {
-      console.error('Error from Resend (company notification):', resendData);
-      throw new Error(resendData.message || 'Failed to send company notification email');
+      await companySmtpClient.close();
+      
+      console.log('Company notification email sent successfully via Gmail');
+    } catch (emailError: any) {
+      console.error('Error sending company notification via Gmail:', emailError);
+      throw emailError; // Critical error, stop execution
     }
-
-    console.log('Company notification email sent successfully:', resendData);
 
     // Send confirmation email to client using Gmail
     try {
@@ -464,7 +468,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, companyEmail: resendData }),
+      JSON.stringify({ success: true }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
