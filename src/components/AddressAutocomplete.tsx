@@ -59,7 +59,7 @@ export function AddressAutocomplete({
     try {
       // Nominatim OpenStreetMap pour la Belgique
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=be&limit=5&q=${encodeURIComponent(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=be&limit=10&q=${encodeURIComponent(
           query,
         )}`,
       );
@@ -168,11 +168,40 @@ export function AddressAutocomplete({
         )}
       </div>
 
-      {showSuggestions && suggestions.length > 0 && (
-        <div className={cn(
-          "absolute z-50 w-full mt-2 bg-card border border-border shadow-lg overflow-hidden",
-          variant === 'branded' ? "rounded-2xl" : "rounded-md"
-        )}>
+      {showSuggestions && (
+        <div
+          className={cn(
+            "absolute z-50 w-full mt-2 bg-card border border-border shadow-lg overflow-hidden",
+            variant === 'branded' ? 'rounded-2xl' : 'rounded-md',
+          )}
+        >
+          {value.trim().length >= 5 && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(value.trim());
+                setShowSuggestions(false);
+              }}
+              className={cn(
+                "w-full text-left px-4 py-3 bg-muted/40 hover:bg-muted transition-colors flex items-start gap-3 border-b border-border",
+                variant === 'branded' && 'hover:bg-salmon/10',
+              )}
+            >
+              <MapPin
+                className={cn(
+                  "h-5 w-5 mt-0.5 flex-shrink-0",
+                  variant === 'branded' ? 'text-salmon' : 'text-muted-foreground',
+                )}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-foreground text-sm">
+                  Utiliser cette adresse telle quelle
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">{value}</div>
+              </div>
+            </button>
+          )}
+
           {suggestions.map((suggestion, index) => (
             <button
               key={index}
@@ -180,18 +209,18 @@ export function AddressAutocomplete({
               onClick={() => handleSuggestionClick(suggestion)}
               className={cn(
                 "w-full text-left px-4 py-3 hover:bg-muted transition-colors flex items-start gap-3 border-b border-border last:border-b-0",
-                selectedIndex === index && "bg-muted",
-                variant === 'branded' && "hover:bg-salmon/10"
+                selectedIndex === index && 'bg-muted',
+                variant === 'branded' && 'hover:bg-salmon/10',
               )}
             >
-              <MapPin className={cn(
-                "h-5 w-5 mt-0.5 flex-shrink-0",
-                variant === 'branded' ? "text-salmon" : "text-muted-foreground"
-              )} />
+              <MapPin
+                className={cn(
+                  "h-5 w-5 mt-0.5 flex-shrink-0",
+                  variant === 'branded' ? 'text-salmon' : 'text-muted-foreground',
+                )}
+              />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-foreground text-sm">
-                  {suggestion.label}
-                </div>
+                <div className="font-medium text-foreground text-sm">{suggestion.label}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">
                   {suggestion.postcode} {suggestion.city}
                 </div>
