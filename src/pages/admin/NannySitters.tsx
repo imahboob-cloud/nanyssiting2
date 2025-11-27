@@ -30,7 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { NannySitterDialog } from '@/components/admin/NannySitterDialog';
-import { Loader2, Plus, Search, Pencil, Trash2, Baby } from 'lucide-react';
+import { NannySitterMissionsDialog } from '@/components/admin/NannySitterMissionsDialog';
+import { Loader2, Plus, Search, Pencil, Trash2, Baby, FileText } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 type NannySitter = Tables<'nannysitters'>;
@@ -47,6 +48,8 @@ const NannySitters = () => {
   const [selectedNannySitter, setSelectedNannySitter] = useState<NannySitter | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [nannysitterToDelete, setNannySitterToDelete] = useState<NannySitter | null>(null);
+  const [missionsDialogOpen, setMissionsDialogOpen] = useState(false);
+  const [nannysitterForMissions, setNannysitterForMissions] = useState<NannySitter | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -282,6 +285,17 @@ const NannySitters = () => {
                   <TableCell>{getStatusBadge(nannysitter.actif)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => {
+                          setNannysitterForMissions(nannysitter);
+                          setMissionsDialogOpen(true);
+                        }}
+                        title="Voir les missions"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(nannysitter)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -310,6 +324,12 @@ const NannySitters = () => {
         nannysitter={selectedNannySitter}
         onSave={handleSave}
         loading={saving}
+      />
+
+      <NannySitterMissionsDialog
+        open={missionsDialogOpen}
+        onOpenChange={setMissionsDialogOpen}
+        nannysitter={nannysitterForMissions}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
