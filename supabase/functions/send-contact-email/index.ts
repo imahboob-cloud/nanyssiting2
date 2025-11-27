@@ -3,6 +3,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.84.0';
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
+// Declare EdgeRuntime for background tasks
+declare const EdgeRuntime: {
+  waitUntil(promise: Promise<any>): void;
+} | undefined;
+
 const GMAIL_USER = Deno.env.get('GMAIL_USER') as string;
 const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') as string;
 
@@ -284,22 +289,19 @@ ${data.address || data.city ? `<tr>
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { name, email, phone, address, postalCode, city, service, message }: ContactFormRequest = await req.json();
-
     console.log('Processing contact form submission:', { name, email, service });
 
-    // Parse name into firstName and lastName
     const nameParts = name.trim().split(' ');
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
 
-    // Save prospect to database
+    // Save prospect to database (FAST - only this is awaited)
     const { error: dbError } = await supabaseAdmin
       .from('clients')
       .insert({
@@ -317,70 +319,74 @@ serve(async (req) => {
 
     if (dbError) {
       console.error('Error saving prospect to database:', dbError);
-      // Continue with email even if DB insert fails
+      throw new Error('Erreur lors de l\'enregistrement');
+    }
+
+    console.log('Prospect saved successfully');
+
+    // Send emails in BACKGROUND (non-blocking)
+    const sendEmails = async () => {
+      try {
+        // Send notification to company
+        const companySmtpClient = new SMTPClient({
+          connection: {
+            hostname: "smtp.gmail.com",
+            port: 465,
+            tls: true,
+            auth: {
+              username: GMAIL_USER,
+              password: GMAIL_APP_PASSWORD,
+            },
+          },
+        });
+
+        await companySmtpClient.send({
+          from: GMAIL_USER,
+          to: 'contact@nannysitting.be',
+          replyTo: email,
+          subject: `Nouvelle demande de ${name} - ${service}`,
+          html: createEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
+        });
+
+        await companySmtpClient.close();
+        console.log('Company notification sent');
+
+        // Send confirmation to client
+        const clientSmtpClient = new SMTPClient({
+          connection: {
+            hostname: "smtp.gmail.com",
+            port: 465,
+            tls: true,
+            auth: {
+              username: GMAIL_USER,
+              password: GMAIL_APP_PASSWORD,
+            },
+          },
+        });
+
+        await clientSmtpClient.send({
+          from: GMAIL_USER,
+          to: email,
+          subject: 'Votre demande a bien été reçue - NannySitting',
+          html: createConfirmationEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
+        });
+
+        await clientSmtpClient.close();
+        console.log('Client confirmation sent');
+      } catch (emailError: any) {
+        console.error('Error sending emails in background:', emailError);
+      }
+    };
+
+    // Use EdgeRuntime.waitUntil for background task
+    if (typeof EdgeRuntime !== 'undefined') {
+      EdgeRuntime.waitUntil(sendEmails());
     } else {
-      console.log('Prospect saved to database successfully');
+      // Fallback if EdgeRuntime not available
+      sendEmails().catch(console.error);
     }
 
-    // Send notification email to company using Gmail
-    try {
-      const companySmtpClient = new SMTPClient({
-        connection: {
-          hostname: "smtp.gmail.com",
-          port: 465,
-          tls: true,
-          auth: {
-            username: GMAIL_USER,
-            password: GMAIL_APP_PASSWORD,
-          },
-        },
-      });
-
-      await companySmtpClient.send({
-        from: GMAIL_USER,
-        to: 'contact@nannysitting.be',
-        replyTo: email,
-        subject: `Nouvelle demande de ${name} - ${service}`,
-        html: createEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
-      });
-
-      await companySmtpClient.close();
-      
-      console.log('Company notification email sent successfully via Gmail');
-    } catch (emailError: any) {
-      console.error('Error sending company notification via Gmail:', emailError);
-      throw emailError; // Critical error, stop execution
-    }
-
-    // Send confirmation email to client using Gmail
-    try {
-      const smtpClient = new SMTPClient({
-        connection: {
-          hostname: "smtp.gmail.com",
-          port: 465,
-          tls: true,
-          auth: {
-            username: GMAIL_USER,
-            password: GMAIL_APP_PASSWORD,
-          },
-        },
-      });
-
-      await smtpClient.send({
-        from: GMAIL_USER,
-        to: email,
-        subject: 'Votre demande a bien été reçue - NannySitting',
-        html: createConfirmationEmailHTML({ name, email, phone, address, postalCode, city, service, message }),
-      });
-
-      await smtpClient.close();
-      
-      console.log('Client confirmation email sent successfully via Gmail');
-    } catch (emailError: any) {
-      console.error('Error sending confirmation email via Gmail:', emailError);
-      // Continue even if confirmation email fails
-    }
-
+    // Return IMMEDIATELY after DB insert
     return new Response(
       JSON.stringify({ success: true }),
       {
